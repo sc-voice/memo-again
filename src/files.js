@@ -2,7 +2,43 @@
     const fs = require('fs');
     const path = require('path');
 
-    function *fileIterator(arg) {
+    async function *files(arg) {
+        var opts = typeof arg === 'string'
+            ? {root:arg}
+            : arg || {};
+        var root = opts.root || __dirname;
+        var stats = opts.stats;
+        var absolute = opts.absolute;
+        root = root.replace("/$", ""); // normalize
+        let stack = [root];
+        let reRoot = new RegExp(`^${root}/`);
+        while (stack.length) {
+            var fpath = stack.pop();
+            if (fs.existsSync(fpath)) {
+                this.found++;
+                var fstats = await fs.promises.stat(fpath);
+                if (fstats.isDirectory()) {
+                    (await fs.promises.readdir(fpath)).forEach(dirEntry=>{
+                        stack.push(path.join(fpath,dirEntry));
+                    });
+                } else if (fstats.isFile()) {
+                    let ypath = absolute 
+                        ? fpath 
+                        : fpath.replace(reRoot,'');
+                    if (stats) {
+                        yield {
+                            stats: fstats,
+                            path: ypath,
+                        }
+                    } else {
+                        yield ypath;
+                    }
+                }
+            }
+        }
+    }
+
+    function *filesSync(arg) {
         var opts = typeof arg === 'string'
             ? {root:arg}
             : arg || {};
@@ -59,8 +95,12 @@
             return local;
         }
 
+        static filesSync(root) {
+            return filesSync(root);
+        }
+
         static files(root) {
-            return fileIterator(root);
+            return files(root);
         }
     }
 
