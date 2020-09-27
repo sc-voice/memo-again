@@ -2,77 +2,6 @@
     const fs = require('fs');
     const path = require('path');
 
-    async function *files(arg) {
-        var opts = typeof arg === 'string'
-            ? {root:arg}
-            : arg || {};
-        var root = opts.root || __dirname;
-        var stats = opts.stats;
-        var absolute = opts.absolute;
-        root = root.replace("/$", ""); // normalize
-        let stack = [root];
-        let reRoot = new RegExp(`^${root}/`);
-        while (stack.length) {
-            var fpath = stack.pop();
-            if (fs.existsSync(fpath)) {
-                this.found++;
-                var fstats = await fs.promises.stat(fpath);
-                if (fstats.isDirectory()) {
-                    (await fs.promises.readdir(fpath)).forEach(dirEntry=>{
-                        stack.push(path.join(fpath,dirEntry));
-                    });
-                } else if (fstats.isFile()) {
-                    let ypath = absolute 
-                        ? fpath 
-                        : fpath.replace(reRoot,'');
-                    if (stats) {
-                        yield {
-                            stats: fstats,
-                            path: ypath,
-                        }
-                    } else {
-                        yield ypath;
-                    }
-                }
-            }
-        }
-    }
-
-    function *filesSync(arg) {
-        var opts = typeof arg === 'string'
-            ? {root:arg}
-            : arg || {};
-        var root = opts.root || __dirname;
-        var stats = opts.stats;
-        var absolute = opts.absolute;
-        root = root.replace("/$", ""); // normalize
-        let stack = [root];
-        let reRoot = new RegExp(`^${root}/`);
-        while (stack.length) {
-            var fpath = stack.pop();
-            if (fs.existsSync(fpath)) {
-                this.found++;
-                var fstats = fs.statSync(fpath);
-                if (fstats.isDirectory()) {
-                    fs.readdirSync(fpath).forEach(dirEntry=>{
-                        stack.push(path.join(fpath,dirEntry));
-                    });
-                } else if (fstats.isFile()) {
-                    let ypath = absolute 
-                        ? fpath 
-                        : fpath.replace(reRoot,'');
-                    if (stats) {
-                        yield {
-                            stats: fstats,
-                            path: ypath,
-                        }
-                    } else {
-                        yield ypath;
-                    }
-                }
-            }
-        }
-    }
 
     class Files {
         static get APP_DIR() {
@@ -95,13 +24,71 @@
             return local;
         }
 
-        static filesSync(root) {
-            return filesSync(root);
+        static *filesSync(arg) {
+            var opts = typeof arg === 'string'
+                ? {root:arg}
+                : arg || {};
+            var root = opts.root || __dirname;
+            var stats = opts.stats;
+            var absolute = opts.absolute;
+            root = root.replace("/$", ""); // normalize
+            let stack = [root];
+            let reRoot = new RegExp(`^${root}/`);
+            while (stack.length) {
+                var fpath = stack.pop();
+                if (fs.existsSync(fpath)) {
+                    this.found++;
+                    var fstats = fs.statSync(fpath);
+                    if (fstats.isDirectory()) {
+                        fs.readdirSync(fpath).forEach(dirEntry=>{
+                            stack.push(path.join(fpath,dirEntry));
+                        });
+                    } else if (fstats.isFile()) {
+                        let ypath = absolute 
+                            ? fpath 
+                            : fpath.replace(reRoot,'');
+                        yield stats
+                            ? { stats: fstats, path: ypath, }
+                            : ypath;
+                    }
+                }
+            }
         }
 
-        static files(root) {
-            return files(root);
+        static async *files(arg) {
+            var opts = typeof arg === 'string'
+                ? {root:arg}
+                : arg || {};
+            var root = opts.root || __dirname;
+            var stats = opts.stats;
+            var absolute = opts.absolute;
+            root = root.replace("/$", ""); // normalize
+            let stack = [root];
+            let reRoot = new RegExp(`^${root}/`);
+            while (stack.length) {
+                var fpath = stack.pop();
+                if (!fs.existsSync(fpath)) {
+                    continue;
+                }
+
+                this.found++;
+                var fstats = await fs.promises.stat(fpath);
+                if (fstats.isDirectory()) {
+                    var entries = await fs.promises.readdir(fpath);
+                    entries.forEach(dirEntry=>{
+                        stack.push(path.join(fpath,dirEntry));
+                    });
+                } else if (fstats.isFile()) {
+                    let ypath = absolute 
+                        ? fpath 
+                        : fpath.replace(reRoot,'');
+                    yield stats
+                        ? { stats: fstats, path: ypath, }
+                        : ypath;
+                }
+            }
         }
+
     }
 
     module.exports = exports.Files = Files;

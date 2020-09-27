@@ -23,7 +23,7 @@ Async generator provides fs.Stats
         absolute: true, // return absolute filepath
     }
     for await (let f of Files.files(FILES_DIR)) {
-        console.log(JSON.stringify(f,null,2));
+        console.log(JSON.stringify(f));
         // {path:..., stats:...}
     }
 ```
