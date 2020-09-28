@@ -13,10 +13,12 @@
             this.storeName = opts.storeName || 'guid-store';
 
             // Unserialized properties
+            var storePath = opts.storePath ||  
+                path.join(LOCAL_DIR, this.storeName);
             Object.defineProperty(this, 'storePath', {
-                value: opts.storePath ||  path.join(LOCAL_DIR, this.storeName),
+                value: storePath,
             });
-            fs.existsSync(this.storePath) || fs.mkdirSync(this.storePath);
+            fs.existsSync(storePath) || fs.mkdirSync(storePath);
         }
 
         guidPath(...args) {
@@ -77,7 +79,8 @@
             };
             var pruner = that.entries();
             var pruneDays = opts.pruneDays || this.pruneDays;
-            var pruneDate = opts.pruneDate || new Date(Date.now()-pruneDays*MS_DAY);
+            var pruneDate = opts.pruneDate || 
+                new Date(Date.now()-pruneDays*MS_DAY);
             var pbody = async (resolve, reject) => { try {
                 let next;
                 while((next=pruner.next()) && !next.done) {

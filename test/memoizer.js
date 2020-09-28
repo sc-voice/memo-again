@@ -3,14 +3,36 @@
     const path = require("path");
     const should = require("should");
     const {
+        MemoCache,
         Memoizer,
     } = require("../index");
     const LOCAL = path.join(__dirname, "..", "local");
     this.timeout(5*1000);
 
-    it("TESTTESTdefault ctor", ()=>{
+    class TestCache {
+        constructor() {
+            this.map = {};
+        }
+
+        get({guid, volume="common"}) {
+            var key = `${guid}-${volume}`;
+            return this.map[key];
+        }
+
+        async put({guid, volume="common", value}) {
+            var key = `${guid}-${volume}`;
+            this.map[key] = value;
+        }
+    }
+
+    it("default ctor", ()=>{
         var mzr = new Memoizer();
-        should(mzr.root).equal(path.join(LOCAL, "memo"));
+        should(mzr.cache).instanceOf(MemoCache);
+    });
+    it("custom ctor", ()=>{
+        var cache = new TestCache();
+        var mzr = new Memoizer({ cache, });
+        should(mzr.cache).equal(cache);
     });
     it("TESTTESTmemoizer stores non-promise results", async()=>{
         var mzr = new Memoizer();
@@ -36,9 +58,11 @@
         should(m3('test')).equal('test-43');
         should(m3('test')).equal('test-43');
     });
-    it("TESTTESTmemoizer stores -promise results", async()=>{
-        const DELAY = 10;
-        var mzr = new Memoizer();
+    it("TESTTESTmemoizer stores promise results", async()=>{
+        const DELAY = 100;
+        var mzr = new Memoizer({
+            cache: new TestCache(),
+        });
         var fp = async arg=>new Promise((resolve, reject)=>{
             setTimeout(()=>{resolve(`${arg}-42`)}, DELAY);
         });

@@ -31,6 +31,7 @@
         var files = [...Files.filesSync()];
         should.deepEqual(files, [
             "memoizer.js",
+            "memo-cache.js",
             "guid-store.js",
             "files.js",
             "file-pruner.js",
@@ -49,6 +50,7 @@
         var files = [...Files.filesSync({absolute:true})];
         should.deepEqual(files.map(f=>f.replace(APP_DIR,'...')), [
             ".../src/memoizer.js",
+            ".../src/memo-cache.js",
             ".../src/guid-store.js",
             ".../src/files.js",
             ".../src/file-pruner.js",

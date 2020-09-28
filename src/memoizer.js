@@ -1,29 +1,11 @@
 (function(exports) {
-    const fs = require('fs');
-    const path = require('path');
     const { MerkleJson } = require('merkle-json');
-    const { LOCAL_DIR } = require('./files');
-
-    class Cache {
-        constructor() {
-            this.map = {};
-        }
-
-        get(key) {
-            return this.map[key];
-        }
-
-        put(key, value) {
-            this.map[key] = value;
-        }
-    }
+    const MemoCache = require('./memo-cache');
 
     class Memoizer {
         constructor(opts={}) {
-            this.root = opts.root || 
-                path.join(LOCAL_DIR, "memo");
             this.mj = new MerkleJson();
-            this.cache = opts.cache || new Cache();
+            this.cache = opts.cache || new MemoCache();
         }
 
         memoize(instance, method) {
@@ -35,35 +17,20 @@
                     fbody,
                     args,
                 };
-                var hash = mj.hash(key);
-                var hashValue = this.cache.get(hash);
-                if (hashValue !== undefined) {
-                    return hashValue.isPromise
-                        ? Promise.resolve(hashValue.value)
-                        : hashValue.value;
-                }
-                var value = method.apply(instance, args);
-                var isPromise = value instanceof Promise;
-                this.cache.put(hash, {
-                    key,
-                    isPromise,
-                    value,
-                });
-                if (isPromise) {
-                    var p = value;
-                    p.then(r=>{
-                        this.cache.put(hash, {
-                            key,
-                            value: r,
-                            isPromise,
-                        });
-                    });
+                var guid = mj.hash(key);
+                var methodName = method && method.name;
+                var className = instance && instance.constructor.name || 
+                    "function";
+                var volume = `${className}.${methodName}`;
+                var value = this.cache.get({guid, volume});
+                if (value === undefined) {
+                    value = method.apply(instance, args);
+                    this.cache.put({guid, volume, value});
                 }
                 return value;
             };
             return f;
         }
-
 
     }
 
