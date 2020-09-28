@@ -11,7 +11,7 @@
     logger.level = 'warn';
     this.timeout(5*1000);
 
-    it("default ctor", ()=>{
+    it("TESTTESTdefault ctor", ()=>{
         should.throws(()=>{ // root is required
             var fp = new FilePruner();
         }); 
@@ -24,7 +24,7 @@
         should(fp.started).equal(undefined);
         should(fp.done).equal(undefined);
     });
-    it("custom ctor", ()=>{
+    it("TESTTESTcustom ctor", ()=>{
         var root = TEST_SOUNDS;
         var onPrune = (oldPath=>false);
         var pruneDays = 100;
@@ -35,7 +35,7 @@
         should(fp.started).equal(undefined);
         should(fp.done).equal(undefined);
     });
-    it("entries() => file iterator", ()=>{
+    it("TESTTESTentries() => file iterator", ()=>{
         var root = TEST_SOUNDS;
         var fp = new FilePruner({ root, });
         var started = Date.now();
@@ -101,7 +101,7 @@
         should(value).equal(undefined);
         should(iter.elapsed).above(1).below(1000);
     });
-    it("pruneOldFiles() handles errors ", async()=>{
+    it("TESTTESTpruneOldFiles() handles errors ", async()=>{
         var root = TEST_SOUNDS;
         var fp = new FilePruner({ root, });
         var promise = fp.pruneOldFiles();
@@ -120,7 +120,7 @@
         should(fp.pruneOldFiles()).not.equal(promise);
 
     });
-    it("pruneOldFiles() ", async()=>{ try {
+    it("TESTTESTpruneOldFiles() ", async()=>{ try {
         var root = TEST_SOUNDS;
         var fp = new FilePruner({ root, });
         var jan1 = new Date(2020,0,1);
@@ -171,7 +171,7 @@
         fs.existsSync(dummy2) && fs.unlinkSync(dummy2); 
         fs.existsSync(dummy3) && fs.unlinkSync(dummy3); 
     }});
-    it("pruneOldFiles() custom onPrune", async()=>{ try {
+    it("TESTTESTpruneOldFiles() custom onPrune", async()=>{ try {
         var root = TEST_SOUNDS;
         var aug262020 = new Date(2020,7,26);
         const MSDAY = 24 * 3600 * 1000;

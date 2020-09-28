@@ -9,7 +9,7 @@
     const local = path.join(__dirname, '..', 'local');
     var mj = new MerkleJson();
 
-    it("TESTTESTGuidStore(opts) creates an asset GuidStore", function() {
+    it("GuidStore(opts) creates an asset GuidStore", function() {
         var store = new GuidStore();
         should(store.storePath).equal(path.join(local, 'guid-store'));
         should(fs.existsSync(store.storePath)).equal(true);

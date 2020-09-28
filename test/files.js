@@ -12,13 +12,13 @@
     const LOCAL_DIR = path.join(APP_DIR, 'local');
     var mj = new MerkleJson();
 
-    it("TESTTESTLOCAL_DIR", ()=>{
+    it("LOCAL_DIR", ()=>{
         should(Files.LOCAL_DIR).equal(LOCAL_DIR);
     });
-    it("TESTTESTAPP_DIR", ()=>{
+    it("APP_DIR", ()=>{
         should(Files.APP_DIR).equal(APP_DIR);
     });
-    it("TESTTESTfilesSync(root) => generator", ()=>{
+    it("filesSync(root) => generator", ()=>{
         // Specify root path
         var files = [...Files.filesSync(FILES_DIR)];
         should.deepEqual(files, [
@@ -37,7 +37,7 @@
             "file-pruner.js",
         ]);
     });
-    it("TESTTESTfilesSync(root) => absolute path", ()=>{
+    it("filesSync(root) => absolute path", ()=>{
         // absolute path 
         var files = [...Files.filesSync({root: FILES_DIR, absolute:true})];
         should.deepEqual(files.map(f=>f.replace(APP_DIR,'...')), [
@@ -56,7 +56,7 @@
             ".../src/file-pruner.js",
         ]);
     });
-    it("TESTTESTfilesSync(root) => stats", ()=>{
+    it("filesSync(root) => stats", ()=>{
         var files = [...Files.filesSync({root: FILES_DIR, stats:true})];
         should.deepEqual(files.map(f=>f.path.replace(APP_DIR,'...')), [
             "universe",
@@ -65,7 +65,7 @@
         ]);
         should.deepEqual(files.map(f=>f.stats.size), [ 9, 13, 6, ]);
     });
-    it("TESTTESTfiles(root) => async generator", async()=>{
+    it("files(root) => async generator", async()=>{
         // The async generator has best performance
         // but Javascript does not yet support spread syntax
         var files = [];

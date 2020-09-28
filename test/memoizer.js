@@ -34,7 +34,7 @@
         var mzr = new Memoizer({ cache, });
         should(mzr.cache).equal(cache);
     });
-    it("TESTTESTmemoizer stores non-promise results", async()=>{
+    it("memoizer stores non-promise results", async()=>{
         var mzr = new Memoizer();
 
         // memoize function
@@ -58,7 +58,7 @@
         should(m3('test')).equal('test-43');
         should(m3('test')).equal('test-43');
     });
-    it("TESTTESTmemoizer stores promise results", async()=>{
+    it("memoizer stores promise results", async()=>{
         const DELAY = 100;
         var mzr = new Memoizer({
             cache: new TestCache(),

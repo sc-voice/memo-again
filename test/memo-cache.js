@@ -37,7 +37,7 @@
         });
         should(mc.store).equal(store);
     });
-    it("TESTTESTput(...) adds cache entry", async ()=>{
+    it("put(...) adds cache entry", async ()=>{
         var mc = new MemoCache({
             store: TEST_STORE,
         });
@@ -58,7 +58,7 @@
         mc.put({ guid, volume, value });
         should.deepEqual(mc.get({guid, volume}), value);
     });
-    it("TESTTESTget(...) retrieves serialized cache entry", async ()=>{
+    it("get(...) retrieves serialized cache entry", async ()=>{
         var mc = new MemoCache({
             store: TEST_STORE,
         });
@@ -71,7 +71,7 @@
         var mc2 = new MemoCache({ store: mc.store });
         should.deepEqual(mc2.get({guid, volume}), value);
     });
-    it("TESTTESTget/put handle Promises", async ()=>{
+    it("get/put handle Promises", async ()=>{
         var mc = new MemoCache({
             store: TEST_STORE,
         });
