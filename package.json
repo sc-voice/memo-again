@@ -1,5 +1,5 @@
 {
-  "name": "serial-memo",
+  "name": "memo-again",
   "version": "0.1.4",
   "description": "Serializable memoizer with promises",
   "main": "index.js",
@@ -30,7 +30,7 @@
     "memoizer"
   ],
   "author": "Karl Lew",
-  "homepage": "https://github.com/sc-voice/serial-memo",
+  "homepage": "https://github.com/sc-voice/memo-again",
   "license": "MIT",
   "eslintConfig": {
     "root": true,
