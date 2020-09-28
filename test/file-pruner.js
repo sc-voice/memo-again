@@ -8,10 +8,11 @@
     } = require("../index");
     const LOCAL = path.join(__dirname, '..', 'local');
     var TEST_SOUNDS = path.join(__dirname, 'data', 'sounds');
+    var TEST_SOUNDS2 = path.join(__dirname, 'data', 'sounds2');
     logger.level = 'warn';
     this.timeout(5*1000);
 
-    it("TESTTESTdefault ctor", ()=>{
+    it("default ctor", ()=>{
         should.throws(()=>{ // root is required
             var fp = new FilePruner();
         }); 
@@ -24,7 +25,7 @@
         should(fp.started).equal(undefined);
         should(fp.done).equal(undefined);
     });
-    it("TESTTESTcustom ctor", ()=>{
+    it("custom ctor", ()=>{
         var root = TEST_SOUNDS;
         var onPrune = (oldPath=>false);
         var pruneDays = 100;
@@ -35,74 +36,8 @@
         should(fp.started).equal(undefined);
         should(fp.done).equal(undefined);
     });
-    it("TESTTESTentries() => file iterator", ()=>{
-        var root = TEST_SOUNDS;
-        var fp = new FilePruner({ root, });
-        var started = Date.now();
-        var iter = fp.entries();
-
-        // iterator tracks start time and elapsed milliseconds
-        should(iter.started.getTime()).above(started-1).below(started+100);
-        should(iter.elapsed).equal(0);
-
-        var dummy1 = path.join(root, "dummy1");
-        fs.writeFileSync(dummy1, "dummy1"); // won't show up in iterator
-        var dummy2 = path.join(root, "dummy2");
-        fs.writeFileSync(dummy2, "dummy2"); // will show up in iterator
-
-        should(typeof iter.next === 'function');
-        should(iter[Symbol.iterator]()).equal(iter);
-
-        var {done, value} = iter.next();
-        should(done).equal(false);
-        should(value).match(/dummy2/);
-        fs.unlinkSync(dummy2);
-        fs.unlinkSync(dummy1); 
-        should(iter).properties({
-            calls: 1, 
-            found: 2,  // 1 file + 1 directory
-            notFound: 0,
-        });
-
-        should(iter.stack.slice(-1)[0]).match(/dummy1/);
-        var {done, value} = iter.next(); // skips deleted file
-        should(done).equal(false);
-        should(value).match(/f1.f1769b95a0843179f14a90afdc5b0d07.mp3/);
-        should(iter).properties({
-            calls: 2, 
-            found: 5, // 3 files + 2 directories
-            notFound: 1, // 1 deleted file
-        });
-
-        var {done, value} = iter.next();
-        should(done).equal(false);
-        should(value).match(/f1.f1769b95a0843179f14a90afdc5b0d07.json/);
-        should(iter).properties({
-            calls: 3, 
-            found: 6, // 4 files + 2 directories
-            notFound: 1, // 1 deleted file
-        });
-
-        var {done, value} = iter.next();
-        should(done).equal(false);
-        should(value).match(/a8.a8e9920cf3e7877d2a879ba0fbd8b81a.txt/);
-        should(iter).properties({
-            calls: 4, 
-            found: 8, // 5 files + 3 directories
-            notFound: 1, // 1 deleted file
-        });
-
-        for (let i=0; i < 11; i++) { // etc.
-            let { done, value } = iter.next();
-            should(done).equal(false);
-        }
-        var {done, value} = iter.next();
-        should(done).equal(true);
-        should(value).equal(undefined);
-        should(iter.elapsed).above(1).below(1000);
-    });
-    it("TESTTESTpruneOldFiles() handles errors ", async()=>{
-        var root = TEST_SOUNDS;
+    it("pruneOldFiles() handles errors ", async()=>{
+        var root = TEST_SOUNDS2;
         var fp = new FilePruner({ root, });
         var promise = fp.pruneOldFiles();
 
@@ -120,7 +55,7 @@
         should(fp.pruneOldFiles()).not.equal(promise);
 
     });
-    it("TESTTESTpruneOldFiles() ", async()=>{ try {
+    it("pruneOldFiles() ", async()=>{ try {
         var root = TEST_SOUNDS;
         var fp = new FilePruner({ root, });
         var jan1 = new Date(2020,0,1);
@@ -171,17 +106,20 @@
         fs.existsSync(dummy2) && fs.unlinkSync(dummy2); 
         fs.existsSync(dummy3) && fs.unlinkSync(dummy3); 
     }});
-    it("TESTTESTpruneOldFiles() custom onPrune", async()=>{ try {
+    it("pruneOldFiles() custom onPrune", async()=>{ try {
         var root = TEST_SOUNDS;
         var aug262020 = new Date(2020,7,26);
         const MSDAY = 24 * 3600 * 1000;
         var pruneDays = (new Date() - aug262020)/MSDAY + 1;
         var fp = new FilePruner({ root, pruneDays, });
         const MSTEST = 100;
-        const onPrune = async oldPath=> { // custom async prune callback
+        var prunable = 0;
+        const onPrune = async (oldPath,stats)=> {
+            // custom async prune callback
             oldFiles.push(oldPath);
+            prunable += stats.size;
             await new Promise(resolve=>setTimeout(()=>resolve(1),MSTEST));
-            should(fp.pruning).above(1).below(5);
+            should(fp.pruning).above(0).below(5);
             return false; // don't delete old file
         };
         var pruneDate = new Date(pruneDays*MSDAY);
@@ -214,6 +152,7 @@
             total: 174138,
             pruned: 0,
         });
+        should(prunable).equal(21); // dummy1+dummy3 file sizes
         should(fp.pruning).equal(0);
 
         // nothing pruned

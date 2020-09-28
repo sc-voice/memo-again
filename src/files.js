@@ -2,7 +2,6 @@
     const fs = require('fs');
     const path = require('path');
 
-
     class Files {
         static get APP_DIR() {
             var fs = eval("require('fs')"); // Fool nuxt

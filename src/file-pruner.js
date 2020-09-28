@@ -2,6 +2,7 @@
     const fs = require('fs');
     const path = require('path');
     const { logger } = require('log-instance');
+    const Files = require('./files');
     const MS_MINUTE = 60 * 1000;
     const MS_DAY = 24 * 60 * MS_MINUTE;
     const PRUNE_DAYS = 180;
@@ -33,14 +34,18 @@
             };
         }
 
-        static onPrune(oldPath) {
+        static onPrune(oldPath, stats) {
             logger.info("prune", oldPath);
             return true;
         }
 
-        pruneOldFiles(onPrune = this.onPrune) {
+        async pruneOldFiles(onPrune = this.onPrune) {
             var that = this;
-            if (that.pruning) {
+            var {
+                root,
+                pruning,
+            } = that;
+            if (pruning) {
                 return Promise.reject(new Error(
                     `pruneOldFiles() ignored (busy)`));
             }
@@ -50,82 +55,36 @@
             that.started = new Date();
             that.size.total = 0;
             that.size.pruned = 0;
-            var entries = that.entries();
             that.earliest = Date.now();
             var pruneDate = new Date(Date.now()-pruneDays*MS_DAY);
             that.log(`pruneOldFiles() started:${that.started}`);
-            var pbody = async (resolve, reject) => { try {
-                let next;
-                while((next=entries.next()) && !next.done) {
-                    var fpath = next.value;
-                    var stats = await fs.promises.stat(fpath);
-                    that.size.total += stats.size;
-                    stats.mtime < that.earliest && (that.earliest = stats.mtime);
-                    if (stats.mtime <= pruneDate) {
-                        that.pruning = entries.stack.length + 1;
-                        if (await onPrune(fpath)) { // qualified delete
-                            pruned.push(fpath);
-                            that.info(`pruneOldFiles() unlink:${fpath}`);
-                            await fs.promises.unlink(fpath);
-                            that.size.pruned += stats.size;
-                        }
+            var pruneOpts = { root, stats:true, absolute:true };
+            that.pruning = 1;
+            for await (let f of Files.files(pruneOpts)) {
+                var { stats, path:fpath } = f;
+                that.size.total += stats.size;
+                stats.mtime < that.earliest && 
+                    (that.earliest = stats.mtime);
+                if (stats.mtime <= pruneDate) {
+                    if (await onPrune(fpath, stats)) { // qualified delete
+                        pruned.push(fpath);
+                        that.info(`pruneOldFiles() unlink:${fpath}`);
+                        await fs.promises.unlink(fpath);
+                        that.size.pruned += stats.size;
                     }
                 }
-                that.pruning = 0;
-                that.done = new Date();
-                var elapsed = ((that.done - that.started)/1000).toFixed(1);
-                that.log(`pruneOldFiles() done:${elapsed}s`);
-                resolve({
-                    started: that.started,
-                    earliest: that.earliest,
-                    done: that.done,
-                    size: that.size,
-                    pruning: that.pruning,
-                    pruned,
-                });
-            } catch(e) { reject(e); }};
-            return new Promise(pbody);
-        }
-
-        entries() {
-            var that = this;
-            let stack = [that.root];
+            }
+            that.pruning = 0;
+            that.done = new Date();
+            var elapsed = ((that.done - that.started)/1000).toFixed(1);
+            that.log(`pruneOldFiles() done:${elapsed}s`);
             return {
-                stack,
-                calls: 0,
-                found: 0,
-                notFound: 0,
-                started: new Date(),
-                elapsed: 0,
-                [Symbol.iterator]: function() { return this; },
-                next: function() {
-                    this.calls++;
-                    while (stack.length) {
-                        var fpath = stack.pop();
-                        if (fs.existsSync(fpath)) {
-                            this.found++;
-                            var stats = fs.statSync(fpath);
-                            if (stats.isDirectory()) {
-                                fs.readdirSync(fpath).forEach(dirEntry=>{
-                                    stack.push(path.join(fpath,dirEntry));
-                                });
-                            } else if (stats.isFile()) {
-                                this.elapsed = new Date() - this.started;
-                                return {
-                                    done: false,
-                                    value: fpath,
-                                }
-                            }
-                        } else {
-                            this.notFound++;
-                            that.info(`skipping deleted entry`, fpath);
-                        }
-                    }
-                    return {
-                        done: true,
-                        value: undefined,
-                    }
-                } // next()
+                started: that.started,
+                earliest: that.earliest,
+                done: that.done,
+                size: that.size,
+                pruning: that.pruning,
+                pruned,
             }
         }
 
