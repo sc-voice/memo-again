@@ -41,10 +41,12 @@
             } else {
                 var fpath = this.store.guidPath({ guid, volume, });
 
-                // Touch file asynchronously after returning value
-                let atime = new Date();
-                let mtime = atime;
-                fs.promises.utimes(fpath, atime, mtime);
+                // Touch file 
+                if (fs.existsSync(fpath)) {
+                    let atime = new Date();
+                    let mtime = atime;
+                    fs.utimesSync(fpath, atime, mtime);
+                }
             }
             return value;
         }
@@ -54,19 +56,21 @@
             mapVolume[guid] = value;
             var fpath = this.store.guidPath({ guid, volume, });
             if (value instanceof Promise) {
-                let actualValue = await value;
-                value = actualValue;
+                var actualValue = await value;
                 await fs.promises.writeFile(fpath, JSON.stringify({
                     isPromise: true,
+                    volume,
                     args,
-                    value,
-                }));
+                    value: actualValue,
+                }, null, 2));
+                value = actualValue;
             } else {
                 await fs.promises.writeFile(fpath, JSON.stringify({
                     isPromise: false,
+                    volume,
                     args,
                     value,
-                }));
+                }, null, 2));
             }
             return value;
         }

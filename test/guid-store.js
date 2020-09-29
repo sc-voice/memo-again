@@ -10,13 +10,13 @@
     const local = path.join(__dirname, '..', 'local');
     var mj = new MerkleJson();
 
-    it("TESTTESTdefault ctor", ()=>{
+    it("default ctor", ()=>{
         var store = new GuidStore();
         should(store.storePath).equal(path.join(local, 'guid-store'));
         should(fs.existsSync(store.storePath)).equal(true);
         should(store.logger).equal(logger);
     });
-    it("TESTTESTcustom ctor", ()=>{
+    it("custom ctor", ()=>{
         var logger2 = new LogInstance();
         var store = new GuidStore({
             type: 'SoundStore',
@@ -104,11 +104,6 @@
         should(fs.existsSync(fDel1)).equal(false);
         should(fs.existsSync(fDel2)).equal(false);
         should(fs.existsSync(fSave)).equal(true);
-
-        // volume must exist
-        try { var eCaught = null; await store.clearVolume("not-there"); }
-        catch(e) { eCaught = e; }
-        should(eCaught.message).match(/Volume not found.*not-there/);
     });
 
 })

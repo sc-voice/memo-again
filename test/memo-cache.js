@@ -71,7 +71,7 @@
         var mc2 = new MemoCache({ store: mc.store });
         should.deepEqual(mc2.get({guid, volume}), value);
     });
-    it("get/put handle Promises", async ()=>{
+    it("TESTTESTget/put handle Promises", async ()=>{
         var mc = new MemoCache({
             store: TEST_STORE,
         });
@@ -86,7 +86,7 @@
         should(await v2).equal("value4");
         should(mc2.map[volume][guid]).equal(v2); // in memory map
     });
-    it("TESTTESTclearVolume() clears cache", async()=>{
+    it("clearVolume() clears cache", async()=>{
         var mc = new MemoCache({
             store: TEST_STORE,
         });
@@ -104,7 +104,7 @@
         should(fs.existsSync(fpath)).equal(false);
         should(mc.get({guid:"guid6",volume:"volume6"})).equal("value6");
     });
-    it("TESTTESTget(...) touches serialized cache entry", async ()=>{
+    it("get(...) touches serialized cache entry", async ()=>{
         var mc = new MemoCache({
             store: TEST_STORE,
         });

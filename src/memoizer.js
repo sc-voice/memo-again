@@ -12,28 +12,38 @@
             });
         }
 
-        memoize(instance, method) {
+        volumeOf(method, context=this.context) {
+            var methodName = method && method.name || "lambda";
+            var contextName = typeof context === 'string' && context
+                || context && context.name 
+                || "global";
+            return `${contextName}.${methodName}`;
+        }
+
+        memoize(method, context) {
             var { mj, cache } = this;
+            var volume = this.volumeOf(method, context);
             var fbody = method.toString();
-            var f = (...args)=>{
+            var fmemo = (...args)=>{
                 var key = {
-                    instance,
+                    volume,
                     fbody,
                     args,
                 };
                 var guid = mj.hash(key);
-                var methodName = method && method.name;
-                var className = instance && instance.constructor.name || 
-                    "function";
-                var volume = `${className}.${methodName}`;
-                var value = this.cache.get({guid, volume});
+                var value = this.cache.get({guid, args, volume});
                 if (value === undefined) {
-                    value = method.apply(instance, args);
+                    value = method.apply(undefined, args);
                     this.cache.put({guid, args, volume, value});
                 }
                 return value;
             };
-            return f;
+            return fmemo;
+        }
+
+        async clearMemo(method, context) {
+            var volume = this.volumeOf(method, context);
+            await this.cache.clearVolume(volume);
         }
 
     }

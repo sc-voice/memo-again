@@ -67,12 +67,11 @@
         async clearVolume(volume=this.volume) {
             let count = 0;
             let root = path.join(this.storePath, volume);
-            if (!fs.existsSync(root)) {
-                throw new Error(`Volume not found:${root}`);
-            }
-            for await (let fname of Files.files({root, absolute:true})) {
-                await fs.promises.unlink(fname);
-                count++;
+            if (fs.existsSync(root)) {
+                for await (let fname of Files.files({root, absolute:true})) {
+                    await fs.promises.unlink(fname);
+                    count++;
+                }
             }
             return count;
         }
