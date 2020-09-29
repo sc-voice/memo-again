@@ -2,9 +2,12 @@
     const fs = require('fs');
     const path = require('path');
     const { LOCAL_DIR } = require('./files');
+    const Files = require('./files');
+    const { logger } = require('log-instance');
 
     class GuidStore {
         constructor(opts={}) {
+            (opts.logger || logger).logInstance(this);
             this.type = opts.type || 'GuidStore';
             this.folderPrefix = opts.folderPrefix || 2;
 
@@ -61,46 +64,18 @@
             return this.guidPath(guidOpts);
         }
 
-        pruneOldFiles(opts={}) {
-            var that = this;
-            if (that.prunerStats) {
-                return Promise.reject(new Error(
-                    `pruneOldFiles() ignored (busy)`));
+        async clearVolume(volume=this.volume) {
+            let count = 0;
+            let root = path.join(this.storePath, volume);
+            if (!fs.existsSync(root)) {
+                throw new Error(`Volume not found:${root}`);
             }
-            var prune = opts.prune || (oldPath=>{
-                that.info(oldPath);
-                return true;
-            });
-            var prunedStats = that.prunerStats = {
-                prune,
-                started: new Date(),
-                done: undefined,
-                pruned: [],
-            };
-            var pruner = that.entries();
-            var pruneDays = opts.pruneDays || this.pruneDays;
-            var pruneDate = opts.pruneDate || 
-                new Date(Date.now()-pruneDays*MS_DAY);
-            var pbody = async (resolve, reject) => { try {
-                let next;
-                while((next=pruner.next()) && !next.done) {
-                    var fpath = next.value;
-                    await new Promise((resolve,reject)=>setTimeout(()=>resolve(true),100));
-                    var stats = await fs.promises.stat(fpath);
-                    if (stats.mtime <= pruneDate) {
-                        if (prune(fpath)) { // qualified delete
-                            prunedStats.pruned.push(fpath);
-                            await fs.promises.unlink(fpath);
-                        }
-                    }
-                }
-                prunedStats.done = new Date();
-                resolve(prunedStats);
-                that.prunerStats = undefined;
-            } catch(e) { reject(e); }};
-            return new Promise(pbody);
+            for await (let fname of Files.files({root, absolute:true})) {
+                await fs.promises.unlink(fname);
+                count++;
+            }
+            return count;
         }
-
     }
 
     module.exports = exports.GuidStore = GuidStore;

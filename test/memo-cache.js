@@ -87,6 +87,40 @@
         should(await v2).equal("value4");
         should(mc2.map[volume][guid]).equal(v2); // in memory map
     });
+    it("TESTTESTclearVolume() clears cache", async()=>{
+        var mc = new MemoCache({
+            store: TEST_STORE,
+        });
+        var guid = "guid5";
+        var volume = "volume5";
+        var value = "value5";
+        await mc.put({ guid, volume, value }); // deleted value
+        await mc.put({ guid: "guid6", volume: "volume6", value:"value6" }); 
+        should(mc.map[volume][guid]).equal(value);
+        var fpath = mc.store.guidPath({guid, volume});
+        should(fs.existsSync(fpath)).equal(true);
+
+        await mc.clearVolume(volume);
+        should(mc.map[volume]).equal(undefined);
+        should(fs.existsSync(fpath)).equal(false);
+        should(mc.get({guid:"guid6",volume:"volume6"})).equal("value6");
+    });
+    it("TESTTESTget(...) touches serialized cache entry", async ()=>{
+        var mc = new MemoCache({
+            store: TEST_STORE,
+        });
+        var guid = "guid7";
+        var volume = "volume7";
+        var value = new Promise(resolve=>
+            setTimeout(()=>resolve("value7"), 100));
+        await mc.put({ guid, volume, value }); // wait for file write
+        var fpath = mc.store.guidPath({guid,volume});
+        var stats1 = fs.statSync(fpath);
+        await new Promise(resolve=>setTimeout(()=>resolve(1),100));
+        should(mc.get({guid,volume})).equal(value);
+        var stats2 = fs.statSync(fpath);
+        should(stats1.atime).below(stats2.atime);
+    });
 
 
 })

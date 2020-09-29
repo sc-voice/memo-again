@@ -1,11 +1,15 @@
 (function(exports) {
     const { MerkleJson } = require('merkle-json');
     const MemoCache = require('./memo-cache');
+    const { logger } = require("log-instance");
 
     class Memoizer {
         constructor(opts={}) {
+            (opts.logger || logger).logInstance(this);
             this.mj = new MerkleJson();
-            this.cache = opts.cache || new MemoCache();
+            this.cache = opts.cache || new MemoCache({
+                logger:this,
+            });
         }
 
         memoize(instance, method) {

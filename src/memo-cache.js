@@ -4,14 +4,17 @@
     const { MerkleJson } = require('merkle-json');
     const { LOCAL_DIR } = require('./files');
     const GuidStore = require("./guid-store");
+    const { logger } = require("log-instance");
 
     class MemoCache {
         constructor(opts={}) {
+            (opts.logger || logger).logInstance(this);
             this.map = {};
             this.suffix = opts.suffix || ".json";
             this.store = opts.store || new GuidStore({
                 storeName: "memo",
                 suffix: this.suffix,
+                logger: this,
             });
         }
 
@@ -35,6 +38,10 @@
                         console.error(e, data);
                     }
                 }
+            } else {
+                var fpath = this.store.guidPath({ guid, volume, });
+                var time = new Date();
+                fs.utimesSync(fpath, time, time);
             }
             return value;
         }
@@ -57,6 +64,12 @@
                 }));
             }
             return value;
+        }
+
+        async clearVolume(volume=this.store.volume) {
+            this.log("clearVolume(${volume})");
+            delete this.map[volume];
+            await this.store.clearVolume(volume);
         }
     }
 
