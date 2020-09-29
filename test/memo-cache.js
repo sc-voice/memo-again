@@ -77,8 +77,7 @@
         });
         var guid = "guid4";
         var volume = "volume4";
-        var value = new Promise(resolve=>
-            setTimeout(()=>resolve("value4"),100));
+        var value = new Promise(r=>setTimeout(()=>r("value4"),100));
         await mc.put({ guid, volume, value }); // wait for file write
 
         var mc2 = new MemoCache({ store: mc.store });
@@ -111,13 +110,12 @@
         });
         var guid = "guid7";
         var volume = "volume7";
-        var value = new Promise(resolve=>
-            setTimeout(()=>resolve("value7"), 100));
+        var value = new Promise(r=> setTimeout(()=>r("value7"), 100));
         await mc.put({ guid, volume, value }); // wait for file write
         var fpath = mc.store.guidPath({guid,volume});
         var stats1 = fs.statSync(fpath);
-        await new Promise(resolve=>setTimeout(()=>resolve(1),100));
         should(mc.get({guid,volume})).equal(value);
+        await new Promise(r=>setTimeout(r,1)); // wait 1ms for utimes
         var stats2 = fs.statSync(fpath);
         should(stats1.atime).below(stats2.atime);
     });

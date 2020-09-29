@@ -40,8 +40,11 @@
                 }
             } else {
                 var fpath = this.store.guidPath({ guid, volume, });
-                var time = new Date();
-                fs.utimesSync(fpath, time, time);
+
+                // Touch file asynchronously after returning value
+                let atime = new Date();
+                let mtime = atime;
+                fs.promises.utimes(fpath, atime, mtime);
             }
             return value;
         }
