@@ -46,7 +46,7 @@
             return value;
         }
 
-        async put({guid, volume=this.store.volume, value}) {
+        async put({guid, args, volume=this.store.volume, value}) {
             let mapVolume = this.map[volume] = this.map[volume] || {};
             mapVolume[guid] = value;
             var fpath = this.store.guidPath({ guid, volume, });
@@ -55,11 +55,13 @@
                 value = actualValue;
                 await fs.promises.writeFile(fpath, JSON.stringify({
                     isPromise: true,
+                    args,
                     value,
                 }));
             } else {
                 await fs.promises.writeFile(fpath, JSON.stringify({
                     isPromise: false,
+                    args,
                     value,
                 }));
             }

@@ -29,7 +29,7 @@
                 var value = this.cache.get({guid, volume});
                 if (value === undefined) {
                     value = method.apply(instance, args);
-                    this.cache.put({guid, volume, value});
+                    this.cache.put({guid, args, volume, value});
                 }
                 return value;
             };
