@@ -57,14 +57,17 @@
             return value;
         }
 
+        isWrite(flag) {
+            return typeof flag === 'function' 
+                ? flag()
+                : flag === true;
+        }
+
         async put({guid, args, volume=this.store.volume, value}) {
-            let {
-                map,
-                writeMem,
-                writeFile,
-            } = this;
+            let { map, } = this;
             let mapVolume = map[volume] = map[volume] || {};
-            writeMem && (mapVolume[guid] = value);
+            
+            this.isWrite(this.writeMem) && (mapVolume[guid] = value);
             let fpath = this.store.guidPath({ guid, volume, });
             let isPromise = value instanceof Promise;
             let cacheValue = {
@@ -77,7 +80,9 @@
                 value = cacheValue.value = await value;
             }
             let json = JSON.stringify(cacheValue, null, 2);
-            writeFile && (await fs.promises.writeFile(fpath, json));
+            if (this.isWrite(this.writeFile)) {
+                await fs.promises.writeFile(fpath, json);
+            }
             return value;
         }
 

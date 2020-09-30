@@ -1,5 +1,24 @@
-Two-level [memoizer](https://en.wikipedia.org/wiki/Memoization) with promises
-stores function values in memory and/or file caches.
+Two-level [memoizer](https://en.wikipedia.org/wiki/Memoization) 
+with promises stores function values in memory and/or file caches.
+Writes to memory and file caches can be independently 
+changed on demand. 
+The file cache is stored in the application `local` folder
+by default, so you may want to add `local/` to `.gitignore`.
+
+### Memoizer
+For more examples, see [test/memoizer.js](https://github.com/sc-voice/memo-again/blob/master/test/memoizer.js)
+
+```
+const { Memoizer } = require("memo-again");
+var f = x=>42+x;
+var mzr = new Memoizer();
+var fmemo = mzr.memoize(f);
+
+fmemo(0); // 42 
+fmemo(0); // 42 (cached)
+fmemo(1); // 43
+fmemo(1); // 43 (cached)
+```
 
 ### Files
 File iterators and more...

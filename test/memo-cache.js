@@ -160,6 +160,29 @@
         var mc2 = new MemoCache({ store: mc.store });
         should.deepEqual(mc2.get({guid, volume}), undefined); 
     });
+    it("TESTTESTEwriteMem and writeFile can be functions", async ()=>{
+        var write;
+        var mc = new MemoCache({
+            store: TEST_STORE,
+            writeMem: ()=>write,
+            writeFile: ()=>write,
+        });
+        var guid = "guid9";
+        var volume = "volume9";
+        var value = "value9";
+        mc.clearVolume(volume);
 
+        write = false;
+        should(mc.isWrite(mc.writeMem)).equal(false);
+        should(mc.isWrite(mc.writeFile)).equal(false);
+        await mc.put({ guid, volume, value }); // wait for file write
+        should.deepEqual(mc.get({guid, volume}), undefined);
+
+        write = true;
+        should(mc.isWrite(mc.writeMem)).equal(true);
+        should(mc.isWrite(mc.writeFile)).equal(true);
+        await mc.put({ guid, volume, value }); // wait for file write
+        should.deepEqual(mc.get({guid, value}), undefined);
+    });
 
 })
