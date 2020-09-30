@@ -16,13 +16,19 @@
                 suffix: this.suffix,
                 logger: this,
             });
+            this.writeMem = opts.writeMem == null ? true : opts.writeMem;
+            this.writeFile = opts.writeFile == null ? true : opts.writeFile;
         }
 
         get({guid, volume=this.store.volume}) {
+            let { 
+                map,
+                writeFile,
+            } = this;
             if (guid == null) {
                 throw new Error("guid expected");
             }
-            let mapVolume = this.map[volume] = this.map[volume] || {};
+            let mapVolume = map[volume] = map[volume] || {};
             let value = mapVolume[guid];
             if (value == undefined) {
                 var fpath = this.store.guidPath({ guid, volume, });
@@ -42,7 +48,7 @@
                 var fpath = this.store.guidPath({ guid, volume, });
 
                 // Touch file 
-                if (fs.existsSync(fpath)) {
+                if (writeFile && fs.existsSync(fpath)) {
                     let atime = new Date();
                     let mtime = atime;
                     fs.utimesSync(fpath, atime, mtime);
@@ -52,26 +58,26 @@
         }
 
         async put({guid, args, volume=this.store.volume, value}) {
-            let mapVolume = this.map[volume] = this.map[volume] || {};
-            mapVolume[guid] = value;
-            var fpath = this.store.guidPath({ guid, volume, });
-            if (value instanceof Promise) {
-                var actualValue = await value;
-                await fs.promises.writeFile(fpath, JSON.stringify({
-                    isPromise: true,
-                    volume,
-                    args,
-                    value: actualValue,
-                }, null, 2));
-                value = actualValue;
-            } else {
-                await fs.promises.writeFile(fpath, JSON.stringify({
-                    isPromise: false,
-                    volume,
-                    args,
-                    value,
-                }, null, 2));
+            let {
+                map,
+                writeMem,
+                writeFile,
+            } = this;
+            let mapVolume = map[volume] = map[volume] || {};
+            writeMem && (mapVolume[guid] = value);
+            let fpath = this.store.guidPath({ guid, volume, });
+            let isPromise = value instanceof Promise;
+            let cacheValue = {
+                isPromise,
+                volume,
+                args,
+                value,
+            };
+            if (isPromise) {
+                value = cacheValue.value = await value;
             }
+            let json = JSON.stringify(cacheValue, null, 2);
+            writeFile && (await fs.promises.writeFile(fpath, json));
             return value;
         }
 

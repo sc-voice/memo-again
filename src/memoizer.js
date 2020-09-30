@@ -9,6 +9,8 @@
             this.mj = new MerkleJson();
             this.cache = opts.cache || new MemoCache({
                 logger:this,
+                writeMem: opts.writeMem,
+                writeFile: opts.writeFile,
             });
         }
 

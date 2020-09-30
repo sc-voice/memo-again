@@ -25,14 +25,25 @@
         }
     }
 
-    it("default ctor", ()=>{
+    it("TESTTESTdefault ctor", ()=>{
         var mzr = new Memoizer();
         should(mzr.cache).instanceOf(MemoCache);
+        should(mzr.cache.writeMem).equal(true);
+        should(mzr.cache.writeFile).equal(true);
     });
-    it("custom ctor", ()=>{
+    it("TESTTESTcustom ctor", ()=>{
         var cache = new TestCache();
         var mzr = new Memoizer({ cache, });
         should(mzr.cache).equal(cache);
+
+        var mzr = new Memoizer({ writeMem: false });
+        should(mzr.cache.writeMem).equal(false);
+        should(mzr.cache.writeFile).equal(true);
+
+        var mzr = new Memoizer({ writeFile: false });
+        should(mzr.cache.writeMem).equal(true);
+        should(mzr.cache.writeFile).equal(false);
+
     });
     it("TESTTESTmemoizer stores non-promise results", async()=>{
         var mzr = new Memoizer();
@@ -82,7 +93,7 @@
         var ms1 = Date.now();
         should(await m('test')).equal('test-42');
         var ms2 = Date.now();
-        should(ms1-ms0).above(DELAY-1);
+        should(ms1-ms0).above(DELAY-5);
         should(ms2-ms1).above(-1).below(DELAY);
     });
     it("TESTTESTvolumeOf(...)=>volume name", ()=>{

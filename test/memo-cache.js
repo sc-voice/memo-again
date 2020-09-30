@@ -28,12 +28,18 @@
     });
     it("custom ctor", ()=>{
         var store = new GuidStore();
+        var writeMem = false;
+        var writeFile = false;
         var mc = new MemoCache({
             store,
+            writeMem,
+            writeFile,
         });
         should(mc).properties({
             map: {},
             store,
+            writeMem,
+            writeFile,
         });
         should(mc.store).equal(store);
     });
@@ -47,6 +53,24 @@
         var res = await mc.put({ guid, volume, value });
         should(mc.map.volume1.guid1).equal(value);
         should(res).equal(value);
+    });
+    it("TESTTESTEwriteMem suppresses memory cache", async ()=>{
+        var mc = new MemoCache({
+            store: TEST_STORE,
+            writeMem: false, // only use file cache
+        });
+        var guid = "guid1";
+        var volume = "volume1";
+        var value = "value1";
+        var res = await mc.put({ guid, volume, value });
+        should(mc.map.volume1.guid1).equal(undefined);
+        should(res).equal(value);
+        should(mc.get({ guid, volume})).equal(value); // file cache
+
+        var mc2 = new MemoCache({
+            store: TEST_STORE,
+        });
+        should(mc2.get({ guid, volume})).equal(value); // file cache
     });
     it("get(...) retrieves cache entry", ()=>{
         var mc = new MemoCache({
@@ -118,6 +142,23 @@
         await new Promise(r=>setTimeout(r,1)); // wait 1ms for utimes
         var stats2 = fs.statSync(fpath);
         should(stats1.atime).below(stats2.atime);
+    });
+    it("TESTTESTwriteFile suppresses file cache", async()=>{
+        var mc = new MemoCache({
+            store: TEST_STORE,
+            writeFile: false, // only use memory cache
+        });
+        var guid = "guid8";
+        var volume = "volume8";
+        var value = "value8";
+        await mc.put({ guid, volume, value }); // wait for file write
+
+        // Original cache instance remembers
+        should.deepEqual(mc.get({guid, volume}), value); // memory
+
+        // New cache instance doesn't remember
+        var mc2 = new MemoCache({ store: mc.store });
+        should.deepEqual(mc2.get({guid, volume}), undefined); 
     });
 
 

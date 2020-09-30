@@ -1,5 +1,5 @@
-Serializable [memoizer](https://en.wikipedia.org/wiki/Memoization) with promises.
-
+Two-level [memoizer](https://en.wikipedia.org/wiki/Memoization) with promises
+stores function values in memory and/or file caches.
 
 ### Files
 File iterators and more...
