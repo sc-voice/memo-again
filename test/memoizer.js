@@ -90,11 +90,12 @@
         var p = m('test');
         should(p).instanceOf(Promise);
         should(await p).equal('test-42');
+        var FUDGE = 2; 
+        should(Date.now()-ms0).above(DELAY-FUDGE); 
+
         var ms1 = Date.now();
         should(await m('test')).equal('test-42');
-        var ms2 = Date.now();
-        should(ms1-ms0).above(DELAY-5);
-        should(ms2-ms1).above(-1).below(DELAY);
+        should(Date.now()-ms1).above(-1).below(DELAY);
     });
     it("TESTTESTvolumeOf(...)=>volume name", ()=>{
         class TestClass {
