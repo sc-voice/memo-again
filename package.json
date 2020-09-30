@@ -27,7 +27,7 @@
     "tag": "git"
   },
   "keywords": [
-    "memoizer"
+    "memoizer", "nodejs", "file cache", "memory cache"
   ],
   "author": "Karl Lew",
   "homepage": "https://github.com/sc-voice/memo-again",
