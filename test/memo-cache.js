@@ -54,7 +54,7 @@
         should(mc.map.volume1.guid1).equal(value);
         should(res).equal(value);
     });
-    it("TESTTESTEwriteMem suppresses memory cache", async ()=>{
+    it("EwriteMem suppresses memory cache", async ()=>{
         var mc = new MemoCache({
             store: TEST_STORE,
             writeMem: false, // only use file cache
@@ -96,7 +96,7 @@
         var mc2 = new MemoCache({ store: mc.store });
         should.deepEqual(mc2.get({guid, volume}), value);
     });
-    it("TESTTESTget/put handle Promises", async ()=>{
+    it("get/put handle Promises", async ()=>{
         var mc = new MemoCache({
             store: TEST_STORE,
         });
@@ -124,7 +124,7 @@
         should(await v2).equal("value4");
         should(mc2.map[volume][guid]).equal(v2); // in memory map
     });
-    it("TESTTESTclearVolume() clears cache", async()=>{
+    it("clearVolume() clears cache", async()=>{
         var mc = new MemoCache({
             store: TEST_STORE,
         });
@@ -161,7 +161,7 @@
         var stats2 = fs.statSync(fpath);
         should(stats1.atime).below(stats2.atime);
     });
-    it("TESTTESTwriteFile suppresses file cache", async()=>{
+    it("writeFile suppresses file cache", async()=>{
         var mc = new MemoCache({
             store: TEST_STORE,
             writeFile: false, // only use memory cache
@@ -179,7 +179,7 @@
         var mc2 = new MemoCache({ store: mc.store });
         should.deepEqual(mc2.get({guid, volume}), undefined); 
     });
-    it("TESTTESTEwriteMem and writeFile can be functions", async ()=>{
+    it("EwriteMem and writeFile can be functions", async ()=>{
         var write;
         var mc = new MemoCache({
             store: TEST_STORE,

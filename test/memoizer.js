@@ -26,13 +26,13 @@
         }
     }
 
-    it("TESTTESTdefault ctor", ()=>{
+    it("default ctor", ()=>{
         var mzr = new Memoizer();
         should(mzr.cache).instanceOf(MemoCache);
         should(mzr.cache.writeMem).equal(true);
         should(mzr.cache.writeFile).equal(true);
     });
-    it("TESTTESTcustom ctor", ()=>{
+    it("custom ctor", ()=>{
         var cache = new TestCache();
         var mzr = new Memoizer({ cache, });
         should(mzr.cache).equal(cache);
@@ -46,8 +46,9 @@
         should(mzr.cache.writeFile).equal(false);
 
     });
-    it("TESTTESTmemoizer stores non-promise results", async()=>{
+    it("memoizer stores non-promise results", async()=>{
         var mzr = new Memoizer();
+        mzr.logLevel = 'info';
 
         // memoize function
         var f1 = function(arg){return `${arg}-41`};
@@ -77,14 +78,13 @@
         should(m3('test')).equal('test-43');
         should(calls).equal(1);
     });
-    it("memoizer stores promise results", async()=>{
+    it("TESTTESTmemoizer stores promise results", async()=>{
         const DELAY = 100;
-        var mzr = new Memoizer({
-            cache: new TestCache(),
-        });
+        var mzr = new Memoizer();
         var fp = async arg=>new Promise((resolve, reject)=>{
             setTimeout(()=>{resolve(`${arg}-42`)}, DELAY);
         });
+        await mzr.clearMemo(fp, CONTEXT);
         var m = mzr.memoize(fp, CONTEXT);
 
         var ms0 = Date.now();
@@ -98,7 +98,7 @@
         should(await m('test')).equal('test-42');
         should(Date.now()-ms1).above(-1).below(DELAY);
     });
-    it("TESTTESTvolumeOf(...)=>volume name", ()=>{
+    it("volumeOf(...)=>volume name", ()=>{
         class TestClass {
             static staticMethod(arg) { 
                 return "a static method";
@@ -117,7 +117,7 @@
             .equal("TestClass.staticMethod");
 
     });
-    it("TESTTESTcustom serialization", async()=>{
+    it("custom serialization", async()=>{
         let lastSerialized;
         class TestClass {
             constructor(opts={}) {

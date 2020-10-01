@@ -76,7 +76,7 @@
         };
         should(store.signaturePath(signature)).equal(expectedPath);
     });
-    it("TESTTESTclearVolume() removes files in volume", async()=>{
+    it("clearVolume() removes files in volume", async()=>{
         var store = new GuidStore();
 
         var fDel1 = store.guidPath({

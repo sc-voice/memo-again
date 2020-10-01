@@ -38,8 +38,13 @@
                 var guid = mj.hash(key);
                 var value = this.cache.get({guid, args, volume});
                 if (value === undefined) {
-                    value = method.apply(undefined, args);
-                    this.cache.put({guid, args, volume, value});
+                    let actualValue = method.apply(undefined, args);
+                    value = cache.put({
+                        guid, 
+                        args, 
+                        volume, 
+                        value:actualValue,
+                    });
                 }
                 return value;
             };

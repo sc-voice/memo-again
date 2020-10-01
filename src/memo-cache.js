@@ -50,7 +50,8 @@
                             : json.value;
                         writeMem && (mapVolume[guid] = value);
                     } catch(e) {
-                        this.error(e.message, {guid, volume});
+                        this.error(`get(`, {guid, volume}, ')',
+                            e.message);
                     }
                 }
             } else {
@@ -94,14 +95,15 @@
                         let actualValue = await promise;
                         cacheValue.value = actualValue;
                         let json = this.serialize(cacheValue);
-                        this.log(`put(${volume},${guid})`,
-                            `async args:${args}`);
+                        this.log(`put(${volume},${guid}) async`,
+                            JSON.stringify(args));
                         await fs.promises.writeFile(fpath, json);
                         return actualValue;
                     })();
                 } else {
                     let json = this.serialize(cacheValue);
-                    this.log(`put(${volume},${guid}) sync args:${args}`);
+                    this.log(`put(${volume},${guid}) sync`,
+                        JSON.stringify(args));
                     fs.writeFileSync(fpath, json);
                 }
             } 
