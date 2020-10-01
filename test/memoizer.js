@@ -8,6 +8,7 @@
     } = require("../index");
     const LOCAL = path.join(__dirname, "..", "local");
     this.timeout(5*1000);
+    const CONTEXT = "test";
 
     class TestCache {
         constructor() {
@@ -19,7 +20,7 @@
             return this.map[key];
         }
 
-        async put({guid, volume="common", value}) {
+        put({guid, volume="common", value}) {
             var key = `${guid}-${volume}`;
             this.map[key] = value;
         }
@@ -50,13 +51,13 @@
 
         // memoize function
         var f1 = function(arg){return `${arg}-41`};
-        var m1 = mzr.memoize(f1);
+        var m1 = mzr.memoize(f1, CONTEXT);
         should(m1('test')).equal('test-41');
         should(m1('test')).equal('test-41');
 
         // memoize arrow function
         var f2 = arg=>`${arg}-42`;
-        var m2 = mzr.memoize(f2);
+        var m2 = mzr.memoize(f2, CONTEXT);
         should(m2('test')).equal('test-42');
         should(m2('test')).equal('test-42');
 
@@ -84,7 +85,7 @@
         var fp = async arg=>new Promise((resolve, reject)=>{
             setTimeout(()=>{resolve(`${arg}-42`)}, DELAY);
         });
-        var m = mzr.memoize(fp);
+        var m = mzr.memoize(fp, CONTEXT);
 
         var ms0 = Date.now();
         var p = m('test');
@@ -115,6 +116,43 @@
         should(mzr.volumeOf(TestClass.staticMethod, TestClass))
             .equal("TestClass.staticMethod");
 
+    });
+    it("TESTTESTcustom serialization", async()=>{
+        let lastSerialized;
+        class TestClass {
+            constructor(opts={}) {
+                this.answer = opts.answer || 0;
+            }
+
+            static serialize(obj) {
+                return lastSerialized = JSON.stringify(obj);
+            }
+
+            static deserialize(obj) {
+                var cached = JSON.parse(obj);
+                cached.value = new TestClass(cached.value);
+                return cached;
+            }
+        }
+        let add1 = x=>new TestClass({answer:x+1});
+        let mzr = new Memoizer({
+            serialize: TestClass.serialize, 
+            deserialize: TestClass.deserialize,
+            writeMem: false,
+        });
+        await mzr.clearMemo(add1, "test");
+        let add1Memo = mzr.memoize(add1, CONTEXT);
+        var ans = add1Memo(42);
+        should(lastSerialized).equal(JSON.stringify({
+            isPromise: false,
+            volume: 'test.add1',
+            args:[42],
+            value:{answer:43},
+        }));
+        var expected = new TestClass({answer:43});
+        should.deepEqual(add1Memo(42), expected); // computed
+        await new Promise(r=>setTimeout(r,100));
+        should.deepEqual(add1Memo(42), expected); // cached
     });
 
 });

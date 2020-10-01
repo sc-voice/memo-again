@@ -18,13 +18,22 @@
             });
             this.writeMem = opts.writeMem == null ? true : opts.writeMem;
             this.writeFile = opts.writeFile == null ? true : opts.writeFile;
+            this.serialize = opts.serialize || MemoCache.serialize;
+            this.deserialize = opts.deserialize || MemoCache.deserialize;
+        }
+
+        static serialize(obj) {
+            return JSON.stringify(obj, null, 2);
+        }
+
+        static deserialize(json) {
+            return JSON.parse(json);
         }
 
         get({guid, volume=this.store.volume}) {
-            let { 
-                map,
-                writeFile,
-            } = this;
+            let { map, } = this;
+            let writeMem = this.isWrite(this.writeMem);
+            let writeFile = this.isWrite(this.writeFile);
             if (guid == null) {
                 throw new Error("guid expected");
             }
@@ -35,11 +44,11 @@
                 if (fs.existsSync(fpath)) {
                     let data = fs.readFileSync(fpath).toString();
                     try {
-                        let json = JSON.parse(data);
+                        let json = this.deserialize(data);
                         value = json.isPromise
                             ? Promise.resolve(json.value)
                             : json.value;
-                        mapVolume[guid] = value;
+                        writeMem && (mapVolume[guid] = value);
                     } catch(e) {
                         console.error(e, data);
                     }
@@ -63,26 +72,33 @@
                 : flag === true;
         }
 
-        async put({guid, args, volume=this.store.volume, value}) {
+        put({guid, args, volume=this.store.volume, value}) {
             let { map, } = this;
             let mapVolume = map[volume] = map[volume] || {};
+            let writeMem = this.isWrite(this.writeMem);
+            let writeFile = this.isWrite(this.writeFile);
             
-            this.isWrite(this.writeMem) && (mapVolume[guid] = value);
+            writeMem && (mapVolume[guid] = value);
             let fpath = this.store.guidPath({ guid, volume, });
             let isPromise = value instanceof Promise;
-            let cacheValue = {
-                isPromise,
-                volume,
-                args,
-                value,
-            };
-            if (isPromise) {
-                value = cacheValue.value = await value;
-            }
-            let json = JSON.stringify(cacheValue, null, 2);
-            if (this.isWrite(this.writeFile)) {
-                await fs.promises.writeFile(fpath, json);
-            }
+            if (writeFile) {
+                let cacheValue = {
+                    isPromise,
+                    volume,
+                    args,
+                    value,
+                };
+                if (isPromise) {
+                    value.then(actualValue=>{
+                        cacheValue.value = actualValue;
+                        let json = this.serialize(cacheValue);
+                        fs.writeFileSync(fpath, json);
+                    });
+                } else {
+                    let json = this.serialize(cacheValue);
+                    fs.writeFileSync(fpath, json);
+                }
+            } 
             return value;
         }
 
@@ -91,6 +107,7 @@
             delete this.map[volume];
             await this.store.clearVolume(volume);
         }
+
     }
 
     module.exports = exports.MemoCache = MemoCache;

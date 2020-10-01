@@ -7,18 +7,21 @@
         constructor(opts={}) {
             (opts.logger || logger).logInstance(this);
             this.mj = new MerkleJson();
+            this.context = opts.context || "global";
             this.cache = opts.cache || new MemoCache({
                 logger:this,
                 writeMem: opts.writeMem,
                 writeFile: opts.writeFile,
+                serialize: opts.serialize,
+                deserialize: opts.deserialize,
             });
         }
 
-        volumeOf(method, context=this.context) {
+        volumeOf(method, context) {
             var methodName = method && method.name || "lambda";
             var contextName = typeof context === 'string' && context
                 || context && context.name 
-                || "global";
+                || this.context;
             return `${contextName}.${methodName}`;
         }
 
