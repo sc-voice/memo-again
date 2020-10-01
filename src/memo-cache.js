@@ -96,14 +96,19 @@
                         cacheValue.value = actualValue;
                         let json = this.serialize(cacheValue);
                         this.log(`put(${volume},${guid}) async`,
-                            JSON.stringify(args));
-                        await fs.promises.writeFile(fpath, json);
+                            `args:${JSON.stringify(args)}`, 
+                            `writeFileSync:${json.length}`);
+                        // We can't use async writeFile here because
+                        // we want to block all reads on the file
+                        // until it is written
+                        fs.writeFileSync(fpath, json);
                         return actualValue;
                     })();
                 } else {
                     let json = this.serialize(cacheValue);
                     this.log(`put(${volume},${guid}) sync`,
-                        JSON.stringify(args));
+                        `args:${JSON.stringify(args)}`, 
+                        `writeFileSync:${json.length}`);
                     fs.writeFileSync(fpath, json);
                 }
             } 
