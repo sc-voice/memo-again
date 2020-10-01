@@ -50,7 +50,7 @@
                             : json.value;
                         writeMem && (mapVolume[guid] = value);
                     } catch(e) {
-                        console.error(e, data);
+                        this.error(e.message, {guid, volume});
                     }
                 }
             } else {
