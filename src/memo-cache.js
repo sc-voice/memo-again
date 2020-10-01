@@ -12,7 +12,7 @@
             this.map = {};
             this.suffix = opts.suffix || ".json";
             this.store = opts.store || new GuidStore({
-                storeName: "memo",
+                storeName: opts.storeName || "memo",
                 suffix: this.suffix,
                 logger: this,
             });

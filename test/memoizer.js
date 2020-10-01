@@ -9,6 +9,7 @@
     const LOCAL = path.join(__dirname, "..", "local");
     this.timeout(5*1000);
     const CONTEXT = "test";
+    const STORENAME = "test-memo";
 
     class TestCache {
         constructor() {
@@ -31,8 +32,9 @@
         should(mzr.cache).instanceOf(MemoCache);
         should(mzr.cache.writeMem).equal(true);
         should(mzr.cache.writeFile).equal(true);
+        should(mzr.cache.store.storeName).equal('memo');
     });
-    it("custom ctor", ()=>{
+    it("TESTTESTcustom ctor", ()=>{
         var cache = new TestCache();
         var mzr = new Memoizer({ cache, });
         should(mzr.cache).equal(cache);
@@ -45,9 +47,12 @@
         should(mzr.cache.writeMem).equal(true);
         should(mzr.cache.writeFile).equal(false);
 
+        var storeName = 'test-memo';
+        var mzr = new Memoizer({ storeName });
+        should(mzr.cache.store.storeName).equal(storeName);
     });
-    it("memoizer stores non-promise results", async()=>{
-        var mzr = new Memoizer();
+    it("TESTTESTmemoizer stores non-promise results", async()=>{
+        var mzr = new Memoizer({storeName: STORENAME});
         mzr.logLevel = 'info';
 
         // memoize function

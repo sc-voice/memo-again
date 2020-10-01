@@ -10,6 +10,7 @@
             this.context = opts.context || "global";
             this.cache = opts.cache || new MemoCache({
                 logger:this,
+                storeName: opts.storeName,
                 writeMem: opts.writeMem,
                 writeFile: opts.writeFile,
                 serialize: opts.serialize,
