@@ -89,13 +89,19 @@
                     value,
                 };
                 if (isPromise) {
-                    value.then(actualValue=>{
+                    var promise = value;
+                    value = (async ()=>{
+                        let actualValue = await promise;
                         cacheValue.value = actualValue;
                         let json = this.serialize(cacheValue);
-                        fs.writeFileSync(fpath, json);
-                    });
+                        this.log(`put(${volume},${guid})`,
+                            `async args:${args}`);
+                        await fs.promises.writeFile(fpath, json);
+                        return actualValue;
+                    })();
                 } else {
                     let json = this.serialize(cacheValue);
+                    this.log(`put(${volume},${guid}) sync args:${args}`);
                     fs.writeFileSync(fpath, json);
                 }
             } 
@@ -103,7 +109,7 @@
         }
 
         async clearVolume(volume=this.store.volume) {
-            this.log("clearVolume(${volume})");
+            this.log(`clearVolume(${volume})`);
             delete this.map[volume];
             await this.store.clearVolume(volume);
         }

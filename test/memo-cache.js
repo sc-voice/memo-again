@@ -100,6 +100,7 @@
         var mc = new MemoCache({
             store: TEST_STORE,
         });
+        mc.logLevel = 'info';
         var guid = "guid4";
         var volume = "volume4";
         var value = new Promise(r=>setTimeout(()=>r("value4"),100));
@@ -108,13 +109,13 @@
         // file cache will be written when value is resolved
         var promise = mc.put({ guid, volume, value }); 
         should(fs.existsSync(fpath)).equal(false);
-        should(promise).equal(value);
 
         // wait for file cache 
         var pval = await promise; // wait for file write
         var fpath = mc.store.guidPath({guid, volume});
         should(fs.existsSync(fpath)).equal(true);
         should(pval).equal(await value);
+        should(mc.logger.lastLog()).match(/put\(volume4,guid4\)/);
 
         // New cache will reuse saved values
         var mc2 = new MemoCache({ store: mc.store });
@@ -123,14 +124,16 @@
         should(await v2).equal("value4");
         should(mc2.map[volume][guid]).equal(v2); // in memory map
     });
-    it("clearVolume() clears cache", async()=>{
+    it("TESTTESTclearVolume() clears cache", async()=>{
         var mc = new MemoCache({
             store: TEST_STORE,
         });
+        mc.logLevel = 'info';
         var guid = "guid5";
         var volume = "volume5";
         var value = "value5";
         await mc.clearVolume(volume); // Clear for testing
+        should(mc.logger.lastLog()).match(/clearVolume\(volume5\)/);
 
         mc.put({ guid, volume, value }); // deleted value
         mc.put({ guid: "guid6", volume: "volume6", value:"value6" }); 
