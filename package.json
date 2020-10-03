@@ -1,6 +1,6 @@
 {
   "name": "memo-again",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "Serializable memoizer with promises",
   "main": "index.js",
   "directories": {

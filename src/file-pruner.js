@@ -35,7 +35,7 @@
         }
 
         static onPrune(oldPath, stats) {
-            logger.info("prune", oldPath);
+            logger.debug("prune", oldPath);
             return true;
         }
 
@@ -68,7 +68,7 @@
                 if (stats.mtime <= pruneDate) {
                     if (await onPrune(fpath, stats)) { // qualified delete
                         pruned.push(fpath);
-                        that.info(`pruneOldFiles() unlink:${fpath}`);
+                        that.debug(`pruneOldFiles() unlink:${fpath}`);
                         await fs.promises.unlink(fpath);
                         that.size.pruned += stats.size;
                     }
