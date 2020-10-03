@@ -115,6 +115,19 @@
             return value;
         }
 
+        volumes() {
+            let writeMem = this.isWrite(this.writeMem);
+            let writeFile = this.isWrite(this.writeFile);
+
+            if (writeMem) {
+                return Object.keys(this.map);
+            }
+            if (writeFile) {
+                return fs.readdirSync(this.store.storePath);
+            }
+            return [];
+        }
+
         async clearVolume(volume=this.store.volume) {
             this.log(`clearVolume(${volume})`);
             delete this.map[volume];

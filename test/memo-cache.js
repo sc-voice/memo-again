@@ -179,7 +179,7 @@
         var mc2 = new MemoCache({ store: mc.store });
         should.deepEqual(mc2.get({guid, volume}), undefined); 
     });
-    it("EwriteMem and writeFile can be functions", async ()=>{
+    it("writeMem and writeFile can be functions", async ()=>{
         var write;
         var mc = new MemoCache({
             store: TEST_STORE,
@@ -203,5 +203,29 @@
         mc.put({ guid, volume, value }); // wait for file write
         should.deepEqual(mc.get({guid, value}), undefined);
     });
+    it("TESTTESTvolumes() => [volumeNames]", async()=>{
+        var mc = new MemoCache({
+            store: TEST_STORE,
+            writeMem: true,
+            writeFile: false,
+        });
+        var guid = "guid10";
+        var volume = "volume10";
+        var value = "value10";
+        mc.put({ guid, volume, value }); // wait for file write
+        should(mc.volumes().find(v=>v===volume)).equal(volume);
+
+        var mc = new MemoCache({
+            store: TEST_STORE,
+            writeMem: false,
+            writeFile: true,
+        });
+        var guid = "guid11";
+        var volume = "volume11";
+        var value = "value11";
+        mc.put({ guid, volume, value }); // wait for file write
+        should(mc.volumes().find(v=>v===volume)).equal(volume);
+    });
+
 
 })
