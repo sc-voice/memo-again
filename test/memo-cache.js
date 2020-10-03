@@ -226,6 +226,18 @@
         mc.put({ guid, volume, value }); // wait for file write
         should(mc.volumes().find(v=>v===volume)).equal(volume);
     });
-
+    it("TESTTESTfileSize() => total file size", async()=>{
+        var mc = new MemoCache({
+            store: TEST_STORE,
+        });
+        var guid = "guid12";
+        var volume = "volume12";
+        var value = "value12";
+        await mc.clearVolume(volume);
+        var bytesBefore = await mc.fileSize();
+        mc.put({ guid, volume, value }); // wait for file write
+        var bytesAfter = await mc.fileSize();
+        should(bytesAfter-bytesBefore).equal(70);
+    });
 
 })

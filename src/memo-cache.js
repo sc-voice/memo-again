@@ -4,6 +4,7 @@
     const { MerkleJson } = require('merkle-json');
     const { LOCAL_DIR } = require('./files');
     const GuidStore = require("./guid-store");
+    const Files = require('./files');
     const { logger } = require("log-instance");
 
     class MemoCache {
@@ -133,6 +134,16 @@
             delete this.map[volume];
             await this.store.clearVolume(volume);
         }
+
+        async fileSize() {
+            let root = this.store.storePath;
+            let bytes = 0;
+            for await (let f of Files.files({root, stats:true})) {
+                bytes += f.stats.size;
+            }
+            return bytes;
+        }
+
 
     }
 
