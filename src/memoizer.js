@@ -13,6 +13,7 @@
                 storeName: opts.storeName,
                 writeMem: opts.writeMem,
                 writeFile: opts.writeFile,
+                readFile: opts.readFile,
                 serialize: opts.serialize,
                 deserialize: opts.deserialize,
             });

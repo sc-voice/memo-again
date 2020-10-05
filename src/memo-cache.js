@@ -19,6 +19,9 @@
             });
             this.writeMem = opts.writeMem == null ? true : opts.writeMem;
             this.writeFile = opts.writeFile == null ? true : opts.writeFile;
+            this.readFile = opts.readFile == null 
+                ? this.writeFile 
+                : opts.readFile;
             this.serialize = opts.serialize || MemoCache.serialize;
             this.deserialize = opts.deserialize || MemoCache.deserialize;
         }
@@ -33,8 +36,9 @@
 
         get({guid, volume=this.store.volume}) {
             let { map, } = this;
-            let writeMem = this.isWrite(this.writeMem);
-            let writeFile = this.isWrite(this.writeFile);
+            let readFile = this.isFlag(this.readFile);
+            let writeMem = this.isFlag(this.writeMem);
+            let writeFile = this.isFlag(this.writeFile);
             if (guid == null) {
                 throw new Error("guid expected");
             }
@@ -42,7 +46,7 @@
             let value = mapVolume[guid];
             if (value == undefined) {
                 var fpath = this.store.guidPath({ guid, volume, });
-                if (fs.existsSync(fpath)) {
+                if (readFile && fs.existsSync(fpath)) {
                     let data = fs.readFileSync(fpath).toString();
                     try {
                         let json = this.deserialize(data);
@@ -68,7 +72,7 @@
             return value;
         }
 
-        isWrite(flag) {
+        isFlag(flag) {
             return typeof flag === 'function' 
                 ? flag()
                 : flag === true;
@@ -77,8 +81,8 @@
         put({guid, args, volume=this.store.volume, value}) {
             let { map, } = this;
             let mapVolume = map[volume] = map[volume] || {};
-            let writeMem = this.isWrite(this.writeMem);
-            let writeFile = this.isWrite(this.writeFile);
+            let writeMem = this.isFlag(this.writeMem);
+            let writeFile = this.isFlag(this.writeFile);
             
             writeMem && (mapVolume[guid] = value);
             let fpath = this.store.guidPath({ guid, volume, });
@@ -117,8 +121,8 @@
         }
 
         volumes() {
-            let writeMem = this.isWrite(this.writeMem);
-            let writeFile = this.isWrite(this.writeFile);
+            let writeMem = this.isFlag(this.writeMem);
+            let writeFile = this.isFlag(this.writeFile);
 
             if (writeMem) {
                 return Object.keys(this.map);

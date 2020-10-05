@@ -32,6 +32,7 @@
         should(mzr.cache).instanceOf(MemoCache);
         should(mzr.cache.writeMem).equal(true);
         should(mzr.cache.writeFile).equal(true);
+        should(mzr.cache.readFile).equal(true);
         should(mzr.cache.store.storeName).equal('memo');
     });
     it("TESTTESTcustom ctor", ()=>{
@@ -42,10 +43,17 @@
         var mzr = new Memoizer({ writeMem: false });
         should(mzr.cache.writeMem).equal(false);
         should(mzr.cache.writeFile).equal(true);
+        should(mzr.cache.readFile).equal(true);
 
         var mzr = new Memoizer({ writeFile: false });
         should(mzr.cache.writeMem).equal(true);
         should(mzr.cache.writeFile).equal(false);
+        should(mzr.cache.readFile).equal(false);
+
+        var mzr = new Memoizer({ readFile: false });
+        should(mzr.cache.writeMem).equal(true);
+        should(mzr.cache.writeFile).equal(true);
+        should(mzr.cache.readFile).equal(false);
 
         var storeName = 'test-memo';
         var mzr = new Memoizer({ storeName });

@@ -18,28 +18,34 @@
         suffix: ".json",
     });
 
-    it("default ctor", ()=>{
+    it("TESTTESTdefault ctor", ()=>{
         var mc = new MemoCache();
         should(mc).properties({
             map: {},
         });
         should(mc.store).instanceOf(GuidStore);
         should(mc.store.storePath).equal(path.join(LOCAL_DIR, "memo"));
+        should(mc.writeMem).equal(true);
+        should(mc.writeFile).equal(true);
+        should(mc.readFile).equal(true);
     });
-    it("custom ctor", ()=>{
+    it("TESTTESTcustom ctor", ()=>{
         var store = new GuidStore();
-        var writeMem = false;
-        var writeFile = false;
+        var writeMem = ()=>false;
+        var writeFile = ()=>false;
+        var readFile = ()=>false;
         var mc = new MemoCache({
             store,
             writeMem,
             writeFile,
+            readFile,
         });
         should(mc).properties({
             map: {},
             store,
             writeMem,
             writeFile,
+            readFile,
         });
         should(mc.store).equal(store);
     });
@@ -54,7 +60,7 @@
         should(mc.map.volume1.guid1).equal(value);
         should(res).equal(value);
     });
-    it("EwriteMem suppresses memory cache", async ()=>{
+    it("writeMem suppresses memory cache", async ()=>{
         var mc = new MemoCache({
             store: TEST_STORE,
             writeMem: false, // only use file cache
@@ -192,14 +198,14 @@
         mc.clearVolume(volume);
 
         write = false;
-        should(mc.isWrite(mc.writeMem)).equal(false);
-        should(mc.isWrite(mc.writeFile)).equal(false);
+        should(mc.isFlag(mc.writeMem)).equal(false);
+        should(mc.isFlag(mc.writeFile)).equal(false);
         mc.put({ guid, volume, value }); // wait for file write
         should.deepEqual(mc.get({guid, volume}), undefined);
 
         write = true;
-        should(mc.isWrite(mc.writeMem)).equal(true);
-        should(mc.isWrite(mc.writeFile)).equal(true);
+        should(mc.isFlag(mc.writeMem)).equal(true);
+        should(mc.isFlag(mc.writeFile)).equal(true);
         mc.put({ guid, volume, value }); // wait for file write
         should.deepEqual(mc.get({guid, value}), undefined);
     });
@@ -238,6 +244,18 @@
         mc.put({ guid, volume, value }); // wait for file write
         var bytesAfter = await mc.fileSize();
         should(bytesAfter-bytesBefore).equal(70);
+    });
+    it("TESTTESTreadFile can disable file cache read", async()=>{
+        var store = TEST_STORE;
+        var mc = new MemoCache({ store, writeMem: false, });
+        var guid = "guid13";
+        var volume = "volume13";
+        var value = "value13";
+        mc.put({ guid, volume, value }); // wait for file write
+        should(mc.get({guid, volume})).equal(value);
+
+        var mcNoRead = new MemoCache({ store, readFile: false });
+        should(mcNoRead.get({guid, volume})).equal(undefined);
     });
 
 })
