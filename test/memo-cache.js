@@ -18,7 +18,7 @@
         suffix: ".json",
     });
 
-    it("TESTTESTdefault ctor", ()=>{
+    it("default ctor", ()=>{
         var mc = new MemoCache();
         should(mc).properties({
             map: {},
@@ -29,7 +29,7 @@
         should(mc.writeFile).equal(true);
         should(mc.readFile).equal(true);
     });
-    it("TESTTESTcustom ctor", ()=>{
+    it("custom ctor", ()=>{
         var store = new GuidStore();
         var writeMem = ()=>false;
         var writeFile = ()=>false;
@@ -152,20 +152,23 @@
         should(fs.existsSync(fpath)).equal(false);
         should(mc.get({guid:"guid6",volume:"volume6"})).equal("value6");
     });
-    it("get(...) touches serialized cache entry", async ()=>{
+    it("TESTTESTget(...) touches serialized cache entry", async ()=>{
         var mc = new MemoCache({
             store: TEST_STORE,
+            writeMem: false,
         });
+        mc.logLevel = 'debug';
         var guid = "guid7";
         var volume = "volume7";
-        var value = new Promise(r=> setTimeout(()=>r("value7"), 100));
+        var value = "value7";
         mc.put({ guid, volume, value }); // wait for file write
         var fpath = mc.store.guidPath({guid,volume});
         var stats1 = fs.statSync(fpath);
-        should(mc.get({guid,volume})).equal(value);
-        await new Promise(r=>setTimeout(r,1)); // wait 1ms for utimes
+        await new Promise(r=>setTimeout(()=>r(),100));
+
+        mc.get({ guid, volume}); // touch
         var stats2 = fs.statSync(fpath);
-        should(stats1.atime).below(stats2.atime);
+        should(stats2.atime-stats1.atime).above(0);
     });
     it("writeFile suppresses file cache", async()=>{
         var mc = new MemoCache({
@@ -209,7 +212,7 @@
         mc.put({ guid, volume, value }); // wait for file write
         should.deepEqual(mc.get({guid, value}), undefined);
     });
-    it("TESTTESTvolumes() => [volumeNames]", async()=>{
+    it("volumes() => [volumeNames]", async()=>{
         var mc = new MemoCache({
             store: TEST_STORE,
             writeMem: true,
@@ -232,7 +235,7 @@
         mc.put({ guid, volume, value }); // wait for file write
         should(mc.volumes().find(v=>v===volume)).equal(volume);
     });
-    it("TESTTESTfileSize() => total file size", async()=>{
+    it("fileSize() => total file size", async()=>{
         var mc = new MemoCache({
             store: TEST_STORE,
         });
@@ -245,7 +248,7 @@
         var bytesAfter = await mc.fileSize();
         should(bytesAfter-bytesBefore).equal(70);
     });
-    it("TESTTESTreadFile can disable file cache read", async()=>{
+    it("readFile can disable file cache read", async()=>{
         var store = TEST_STORE;
         var mc = new MemoCache({ store, writeMem: false, });
         var guid = "guid13";

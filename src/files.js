@@ -16,9 +16,7 @@
             var fs = eval("require('fs')"); // Fool nuxt
             var path = require('path');
             var local = path.join(Files.APP_DIR, 'local');
-            if (!fs.existsSync(local)) {
-                fs.mkdirSync(local);
-            }
+            fs.mkdirSync(local, {recursive: true});
 
             return local;
         }

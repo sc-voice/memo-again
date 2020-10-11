@@ -11,24 +11,22 @@
 
     class FilePruner { 
         constructor(opts={}) {
-            var that = this;
-
             // options
-            that.name = `${that.constructor.name}_${++instances}`;
+            this.name = `${this.constructor.name}_${++instances}`;
             (opts.logger || logger).logInstance(this);
             if (!fs.existsSync(opts.root)) {
                 throw new Error(`Expected file path for root:${opts.root}`);
             }
-            that.root = opts.root;
-            that.pruneDays = opts.pruneDays || PRUNE_DAYS;
-            that.onPrune = opts.onPrune || FilePruner.onPrune;
+            this.root = opts.root;
+            this.pruneDays = opts.pruneDays || PRUNE_DAYS;
+            this.onPrune = opts.onPrune || FilePruner.onPrune;
 
             // instance
-            that.started = undefined;
-            that.done = undefined;
-            that.earliest = undefined;
-            that.pruning = 0;
-            that.size = {
+            this.started = undefined;
+            this.done = undefined;
+            this.earliest = undefined;
+            this.pruning = 0;
+            this.size = {
                 total: 0,
                 pruned: 0,
             };
@@ -39,54 +37,55 @@
             return true;
         }
 
-        async pruneOldFiles(onPrune = this.onPrune) {
-            var that = this;
+        async pruneOldFiles(onPrune = this.onPrune) { try {
             var {
                 root,
                 pruning,
-            } = that;
+            } = this;
             if (pruning) {
-                return Promise.reject(new Error(
-                    `pruneOldFiles() ignored (busy)`));
+                throw new Error(`pruneOldFiles() ignored (busy)`);
             }
-            that.pruning = 1;
-            var pruneDays = that.pruneDays || 180;
+            this.pruning = 1;
+            var pruneDays = this.pruneDays || 180;
             var pruned = [];
-            that.started = new Date();
-            that.size.total = 0;
-            that.size.pruned = 0;
-            that.earliest = Date.now();
+            this.started = new Date();
+            this.size.total = 0;
+            this.size.pruned = 0;
+            this.earliest = Date.now();
             var pruneDate = new Date(Date.now()-pruneDays*MS_DAY);
-            that.log(`pruneOldFiles() started:${that.started}`);
+            this.log(`pruneOldFiles() started:${this.started}`);
             var pruneOpts = { root, stats:true, absolute:true };
-            that.pruning = 1;
+            this.pruning = 1;
             for await (let f of Files.files(pruneOpts)) {
                 var { stats, path:fpath } = f;
-                that.size.total += stats.size;
-                stats.mtime < that.earliest && 
-                    (that.earliest = stats.mtime);
+                this.size.total += stats.size;
+                stats.mtime < this.earliest && 
+                    (this.earliest = stats.mtime);
                 if (stats.mtime <= pruneDate) {
                     if (await onPrune(fpath, stats)) { // qualified delete
                         pruned.push(fpath);
-                        that.debug(`pruneOldFiles() unlink:${fpath}`);
+                        this.debug(`pruneOldFiles() unlink:${fpath}`);
                         await fs.promises.unlink(fpath);
-                        that.size.pruned += stats.size;
+                        this.size.pruned += stats.size;
                     }
                 }
             }
-            that.pruning = 0;
-            that.done = new Date();
-            var elapsed = ((that.done - that.started)/1000).toFixed(1);
-            that.log(`pruneOldFiles() done:${elapsed}s`);
+            this.pruning = 0;
+            this.done = new Date();
+            var elapsed = ((this.done - this.started)/1000).toFixed(1);
+            this.log(`pruneOldFiles() done:${elapsed}s`);
             return {
-                started: that.started,
-                earliest: that.earliest,
-                done: that.done,
-                size: that.size,
-                pruning: that.pruning,
+                started: this.started,
+                earliest: this.earliest,
+                done: this.done,
+                size: this.size,
+                pruning: this.pruning,
                 pruned,
             }
-        }
+        } catch(e) {
+            this.warn(`pruneOldFiles()`, e.message);
+            throw e;
+        }}
 
     }
 

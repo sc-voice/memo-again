@@ -21,7 +21,7 @@
             Object.defineProperty(this, 'storePath', {
                 value: storePath,
             });
-            fs.existsSync(storePath) || fs.mkdirSync(storePath);
+            fs.mkdirSync(storePath, {recursive: true});
         }
 
         guidPath(...args) {

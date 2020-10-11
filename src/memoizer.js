@@ -11,6 +11,7 @@
             this.cache = opts.cache || new MemoCache({
                 logger:this,
                 storeName: opts.storeName,
+                storePath: opts.storePath,
                 writeMem: opts.writeMem,
                 writeFile: opts.writeFile,
                 readFile: opts.readFile,
@@ -53,10 +54,14 @@
             return fmemo;
         }
 
-        async clearMemo(method, context) {
+        async clearMemo(method, context) { try {
             var volume = this.volumeOf(method, context);
             await this.cache.clearVolume(volume);
-        }
+        } catch(e) {
+            this.warn(`clearMemo()`, JSON.stringify({method, context}), 
+                e.message);
+            throw e;
+        }}
 
     }
 

@@ -34,11 +34,17 @@
         should(mzr.cache.writeFile).equal(true);
         should(mzr.cache.readFile).equal(true);
         should(mzr.cache.store.storeName).equal('memo');
+        should(mzr.cache.store.storePath).equal(`${LOCAL}/memo`);
     });
-    it("TESTTESTcustom ctor", ()=>{
+    it("custom ctor", ()=>{
         var cache = new TestCache();
-        var mzr = new Memoizer({ cache, });
+        var mzr = new Memoizer({ cache });
         should(mzr.cache).equal(cache);
+
+        var storePath = path.join(LOCAL, `custom`, `here`);
+        var mzr = new Memoizer({ storePath});
+        should(mzr.cache.store.storePath).equal(storePath);
+        should(fs.existsSync(storePath)).equal(true);
 
         var mzr = new Memoizer({ writeMem: false });
         should(mzr.cache.writeMem).equal(false);
@@ -59,7 +65,7 @@
         var mzr = new Memoizer({ storeName });
         should(mzr.cache.store.storeName).equal(storeName);
     });
-    it("TESTTESTmemoizer stores non-promise results", async()=>{
+    it("memoizer stores non-promise results", async()=>{
         var mzr = new Memoizer({storeName: STORENAME});
         mzr.logLevel = 'info';
 
@@ -91,7 +97,7 @@
         should(m3('test')).equal('test-43');
         should(calls).equal(1);
     });
-    it("TESTTESTmemoizer stores promise results", async()=>{
+    it("memoizer stores promise results", async()=>{
         const DELAY = 100;
         var mzr = new Memoizer();
         var fp = async arg=>new Promise((resolve, reject)=>{

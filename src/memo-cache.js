@@ -14,6 +14,7 @@
             this.suffix = opts.suffix || ".json";
             this.store = opts.store || new GuidStore({
                 storeName: opts.storeName || "memo",
+                storePath: opts.storePath,
                 suffix: this.suffix,
                 logger: this,
             });
@@ -94,6 +95,7 @@
                     args,
                     value,
                 };
+                this.debug(`put() writeFile:${fpath}`);
                 if (isPromise) {
                     var promise = value;
                     value = (async ()=>{
@@ -133,21 +135,26 @@
             return [];
         }
 
-        async clearVolume(volume=this.store.volume) {
+        async clearVolume(volume=this.store.volume) { try {
             this.log(`clearVolume(${volume})`);
             delete this.map[volume];
             await this.store.clearVolume(volume);
-        }
+        } catch(e) {
+            this.warn(`clearVolume(${volume})`, e.message);
+            throw e;
+        }}
 
-        async fileSize() {
+        async fileSize() { try {
             let root = this.store.storePath;
             let bytes = 0;
             for await (let f of Files.files({root, stats:true})) {
                 bytes += f.stats.size;
             }
             return bytes;
-        }
-
+        } catch(e) {
+            this.warn('fileSize()', e.message);
+            throw e;
+        }}
 
     }
 
