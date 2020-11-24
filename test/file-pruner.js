@@ -9,10 +9,10 @@
     const LOCAL = path.join(__dirname, '..', 'local');
     var TEST_SOUNDS = path.join(__dirname, 'data', 'sounds');
     var TEST_SOUNDS2 = path.join(__dirname, 'data', 'sounds2');
-    logger.level = 'warn';
+    logger.level = 'info';
     this.timeout(5*1000);
 
-    it("default ctor", ()=>{
+    it("TESTTESTdefault ctor", ()=>{
         should.throws(()=>{ // root is required
             var fp = new FilePruner();
         }); 
@@ -24,6 +24,9 @@
         should(fp.onPrune).equal(FilePruner.onPrune);
         should(fp.started).equal(undefined);
         should(fp.done).equal(undefined);
+        should(fp.bytesScanned).equal(0);
+        should(fp.bytesPruned).equal(0);
+        should(fp.filesPruned).equal(0);
     });
     it("custom ctor", ()=>{
         var root = TEST_SOUNDS;
@@ -36,7 +39,7 @@
         should(fp.started).equal(undefined);
         should(fp.done).equal(undefined);
     });
-    it("pruneOldFiles() handles errors ", async()=>{
+    it("TESTTESTpruneOldFiles() handles errors ", async()=>{
         var root = TEST_SOUNDS2;
         var fp = new FilePruner({ root, });
         var promise = fp.pruneOldFiles();
@@ -55,7 +58,7 @@
         should(fp.pruneOldFiles()).not.equal(promise);
 
     });
-    it("pruneOldFiles() ", async()=>{ try {
+    it("TESTTESTpruneOldFiles() ", async()=>{ try {
         var root = TEST_SOUNDS;
         var fp = new FilePruner({ root, });
         var jan1 = new Date(2020,0,1);
@@ -79,21 +82,20 @@
         var promise = fp.pruneOldFiles();
 
         var { 
-            pruned, 
-            size, 
+            filesPruned, 
+            bytesPruned,
+            bytesScanned,
             done, 
             started,
             earliest,
         } = await promise;
-        should(pruned.length).equal(2);
-        should(pruned[0]).match(/dummy3/);
-        should(pruned[1]).match(/dummy1/);
-        should(size).properties({
-            total: 174138,
-            pruned: 21,
-        });
+        should(filesPruned).equal(2);
+        should(bytesScanned).equal(174138);
+        should(bytesPruned).equal(21);
         should(fp).properties({
-            size,
+            bytesScanned: 174138,
+            bytesPruned: 21,
+            filesPruned: 2,
             pruning: 0,
         });
         should(earliest.toString()).equal(jan1.toString());
@@ -106,7 +108,7 @@
         fs.existsSync(dummy2) && fs.unlinkSync(dummy2); 
         fs.existsSync(dummy3) && fs.unlinkSync(dummy3); 
     }});
-    it("pruneOldFiles() custom onPrune", async()=>{ try {
+    it("TESTTESTpruneOldFiles() custom onPrune", async()=>{ try {
         var root = TEST_SOUNDS;
         var aug262020 = new Date(2020,7,26);
         const MSDAY = 24 * 3600 * 1000;
@@ -148,15 +150,20 @@
         should(oldFiles[0]).match(/dummy3/);
         should(oldFiles[1]).match(/dummy1/);
         should(res.done - res.started).above(2*MSTEST).below(5000);
-        should(res.size).properties({
-            total: 174138,
-            pruned: 0,
+        should(res).properties({
+            bytesScanned: 174138,
+            bytesPruned: 0,
+            filesPruned: 0,
         });
         should(prunable).equal(21); // dummy1+dummy3 file sizes
         should(fp.pruning).equal(0);
 
         // nothing pruned
-        should.deepEqual(res.pruned, []);
+        should(res).properties({
+            bytesScanned: 174138,
+            bytesPruned: 0,
+            filesPruned: 0,
+        });
         should(fs.existsSync(dummy1)).equal(true);
         should(fs.existsSync(dummy2)).equal(true);
         should(fs.existsSync(dummy3)).equal(true);

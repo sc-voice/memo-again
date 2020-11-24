@@ -26,14 +26,13 @@
             this.done = undefined;
             this.earliest = undefined;
             this.pruning = 0;
-            this.size = {
-                total: 0,
-                pruned: 0,
-            };
+            this.bytesScanned = 0;
+            this.bytesPruned = 0;
+            this.filesPruned = 0;
         }
 
         static onPrune(oldPath, stats) {
-            logger.debug("prune", oldPath);
+            logger.debug("FilePruner.onPrune()", oldPath);
             return true;
         }
 
@@ -47,40 +46,46 @@
             }
             this.pruning = 1;
             var pruneDays = this.pruneDays || 180;
-            var pruned = [];
             this.started = new Date();
-            this.size.total = 0;
-            this.size.pruned = 0;
+            this.bytesScanned = 0;
+            this.bytesPruned = 0;
             this.earliest = Date.now();
             var pruneDate = new Date(Date.now()-pruneDays*MS_DAY);
-            this.log(`pruneOldFiles() started:${this.started}`);
+            this.info(`pruneOldFiles() started:${this.started}`);
             var pruneOpts = { root, stats:true, absolute:true };
             this.pruning = 1;
+            let filesPruned = 0;
+            let bytesPruned = 0;
+            let bytesScanned = 0;
             for await (let f of Files.files(pruneOpts)) {
                 var { stats, path:fpath } = f;
-                this.size.total += stats.size;
+                bytesScanned += stats.size;
+                this.bytesScanned += stats.size;
                 stats.mtime < this.earliest && 
                     (this.earliest = stats.mtime);
                 if (stats.mtime <= pruneDate) {
                     if (await onPrune(fpath, stats)) { // qualified delete
-                        pruned.push(fpath);
+                        filesPruned++;
+                        this.filesPruned++;
                         this.debug(`pruneOldFiles() unlink:${fpath}`);
                         await fs.promises.unlink(fpath);
-                        this.size.pruned += stats.size;
+                        bytesPruned += stats.size;
+                        this.bytesPruned += stats.size;
                     }
                 }
             }
             this.pruning = 0;
             this.done = new Date();
             var elapsed = ((this.done - this.started)/1000).toFixed(1);
-            this.log(`pruneOldFiles() done:${elapsed}s`);
+            this.info(`pruneOldFiles() done:${elapsed}s`);
             return {
                 started: this.started,
                 earliest: this.earliest,
                 done: this.done,
-                size: this.size,
+                bytesScanned,
+                bytesPruned,
+                filesPruned,
                 pruning: this.pruning,
-                pruned,
             }
         } catch(e) {
             this.warn(`pruneOldFiles()`, e.message);
