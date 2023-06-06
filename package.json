@@ -8,12 +8,12 @@
     "test": "test"
   },
   "dependencies": {
-    "log-instance": "^0.2.5",
+    "log-instance": "^1.4.0",
     "merkle-json": "^2.1.0"
   },
   "devDependencies": {
     "eslint-plugin-html": "^4.0.5",
-    "mocha": "^7.1.1",
+    "mocha": "^10.2.0",
     "should": "^11.2.0"
   },
   "scripts": {
