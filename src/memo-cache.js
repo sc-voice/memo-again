@@ -25,6 +25,8 @@
                 : opts.readFile;
             this.serialize = opts.serialize || MemoCache.serialize;
             this.deserialize = opts.deserialize || MemoCache.deserialize;
+            this.fileReads = 0;
+            this.fileWrites = 0;
         }
 
         static serialize(obj) {
@@ -36,6 +38,7 @@
         }
 
         get({guid, volume=this.store.volume}) {
+            const msg = 'MemoCache.get() ';
             let { map, } = this;
             let readFile = this.isFlag(this.readFile);
             let writeMem = this.isFlag(this.writeMem);
@@ -48,8 +51,9 @@
             if (value == undefined) {
                 var fpath = this.store.guidPath({ guid, volume, });
                 if (readFile && fs.existsSync(fpath)) {
-                    let data = fs.readFileSync(fpath).toString();
                     try {
+                        let data = fs.readFileSync(fpath).toString();
+                        this.fileReads++;
                         let json = this.deserialize(data);
                         value = json.isPromise
                             ? Promise.resolve(json.value)
@@ -109,6 +113,7 @@
                         // we want to block all reads on the file
                         // until it is written
                         fs.writeFileSync(fpath, json);
+                        this.fileWrites++;
                         return actualValue;
                     })();
                 } else {
@@ -117,6 +122,7 @@
                         `args:${JSON.stringify(args)}`, 
                         `writeFileSync:${json.length}`);
                     fs.writeFileSync(fpath, json);
+                    this.fileWrites++;
                 }
             } 
             return value;

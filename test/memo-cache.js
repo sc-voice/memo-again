@@ -161,14 +161,14 @@
         var guid = "guid7";
         var volume = "volume7";
         var value = "value7";
+        should(mc).properties({fileReads:0, fileWrites:0});
         mc.put({ guid, volume, value }); // wait for file write
+        should(mc).properties({fileReads:0, fileWrites:1});
         var fpath = mc.store.guidPath({guid,volume});
-        var stats1 = fs.statSync(fpath);
         await new Promise(r=>setTimeout(()=>r(),100));
 
         mc.get({ guid, volume}); // touch
-        var stats2 = fs.statSync(fpath);
-        should(stats2.atime-stats1.atime).above(0);
+        should(mc).properties({fileReads:1, fileWrites:1});
     });
     it("writeFile suppresses file cache", async()=>{
         var mc = new MemoCache({
