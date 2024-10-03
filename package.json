@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "eslint-plugin-html": "^4.0.5",
-    "mocha": "^10.2.0",
+    "mocha": "^10.7.3",
     "should": "^11.2.0"
   },
   "scripts": {
