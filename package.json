@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "log-instance": "^1.5.0",
-    "merkle-json": "^2.1.0"
+    "merkle-json": "^2.7.0"
   },
   "devDependencies": {
     "eslint-plugin-html": "^4.0.5",
