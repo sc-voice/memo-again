@@ -1,43 +1,44 @@
-(typeof describe === 'function') && describe("file-pruner", function() {
-    const should = require("should");
-    const fs = require('fs');
-    const path = require('path');
-    const { logger, LogInstance } = require('log-instance');
-    const {
-        FilePruner,
-    } = require("../index");
-    const LOCAL = path.join(__dirname, '..', 'local');
-    var TEST_SOUNDS = path.join(__dirname, 'data', 'sounds');
-    var TEST_SOUNDS2 = path.join(__dirname, 'data', 'sounds2');
-    logger.level = 'info';
-    this.timeout(5*1000);
+import { describe, it, expect } from '@sc-voice/vitest';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { logger, LogInstance } from 'log-instance';
+import { FilePruner } from '../index.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const LOCAL = path.join(__dirname, '..', 'local');
+var TEST_SOUNDS = path.join(__dirname, 'data', 'sounds');
+var TEST_SOUNDS2 = path.join(__dirname, 'data', 'sounds2');
+logger.level = 'info';
+
+describe("file-pruner", () => {
 
     it("TESTTESTdefault ctor", ()=>{
-        should.throws(()=>{ // root is required
+        expect(()=>{ // root is required
             var fp = new FilePruner();
-        }); 
+        }).toThrow();
         var root = TEST_SOUNDS;
         var fp = new FilePruner({root});
-        should(fp.pruneDays).equal(180);
-        should(fp.pruning).equal(0);
-        should(fp.logger).equal(logger);
-        should(fp.onPrune).equal(FilePruner.onPrune);
-        should(fp.started).equal(undefined);
-        should(fp.done).equal(undefined);
-        should(fp.bytesScanned).equal(0);
-        should(fp.bytesPruned).equal(0);
-        should(fp.filesPruned).equal(0);
+        expect(fp.pruneDays).toBe(180);
+        expect(fp.pruning).toBe(0);
+        expect(fp.logger).toBe(logger);
+        expect(fp.onPrune).toBe(FilePruner.onPrune);
+        expect(fp.started).toBe(undefined);
+        expect(fp.done).toBe(undefined);
+        expect(fp.bytesScanned).toBe(0);
+        expect(fp.bytesPruned).toBe(0);
+        expect(fp.filesPruned).toBe(0);
     });
     it("custom ctor", ()=>{
         var root = TEST_SOUNDS;
         var onPrune = (oldPath=>false);
         var pruneDays = 100;
         var fp = new FilePruner({root, pruneDays, onPrune});
-        should(fp.pruneDays).equal(pruneDays);
-        should(fp.pruning).equal(0);
-        should(fp.onPrune).equal(onPrune);
-        should(fp.started).equal(undefined);
-        should(fp.done).equal(undefined);
+        expect(fp.pruneDays).toBe(pruneDays);
+        expect(fp.pruning).toBe(0);
+        expect(fp.onPrune).toBe(onPrune);
+        expect(fp.started).toBe(undefined);
+        expect(fp.done).toBe(undefined);
     });
     it("TESTTESTpruneOldFiles() handles errors ", async()=>{
         var root = TEST_SOUNDS2;
@@ -48,14 +49,14 @@
         var eCaught = null;
         try {
             await fp.pruneOldFiles();
-            should.fail("Expected reject");
+            throw new Error("Expected reject");
         } catch(e) {
-            should(e.message).match(/ignored \(busy\)/);
+            expect(e.message).toMatch(/ignored \(busy\)/);
         }
         var res = await promise;
 
         // Subsequent pruning is a different promise
-        should(fp.pruneOldFiles()).not.equal(promise);
+        expect(fp.pruneOldFiles()).not.toBe(promise);
 
     });
     it("TESTTESTpruneOldFiles() ", async()=>{ try {
@@ -71,7 +72,7 @@
         } catch (err) {
             fs.closeSync(fs.openSync(dummy1, 'w'));
         }
-        fs.writeFileSync(dummy2, "dummy2"); 
+        fs.writeFileSync(dummy2, "dummy2");
         fs.writeFileSync(dummy3, "dummy3.mp3");
         try { // touch jan1
             fs.utimesSync(dummy3, jan1, jan1);
@@ -81,32 +82,33 @@
 
         var promise = fp.pruneOldFiles();
 
-        var { 
-            filesPruned, 
+        var {
+            filesPruned,
             bytesPruned,
             bytesScanned,
-            done, 
+            done,
             started,
             earliest,
         } = await promise;
-        should(filesPruned).equal(2);
-        should(bytesScanned).equal(174138);
-        should(bytesPruned).equal(21);
-        should(fp).properties({
+        expect(filesPruned).toBe(2);
+        expect(bytesScanned).toBe(174138);
+        expect(bytesPruned).toBe(21);
+        expect(fp).properties({
             bytesScanned: 174138,
             bytesPruned: 21,
             filesPruned: 2,
             pruning: 0,
         });
-        should(earliest.toString()).equal(jan1.toString());
-        should(done - started).above(0).below(5000);
+        expect(earliest.toString()).toBe(jan1.toString());
+        expect(done - started).toBeGreaterThan(0);
+        expect(done - started).toBeLessThan(5000);
 
-        should(fs.existsSync(dummy1)).equal(false);
-        should(fs.existsSync(dummy3)).equal(false);
+        expect(fs.existsSync(dummy1)).toBe(false);
+        expect(fs.existsSync(dummy3)).toBe(false);
     } finally {
-        fs.existsSync(dummy1) && fs.unlinkSync(dummy1); 
-        fs.existsSync(dummy2) && fs.unlinkSync(dummy2); 
-        fs.existsSync(dummy3) && fs.unlinkSync(dummy3); 
+        fs.existsSync(dummy1) && fs.unlinkSync(dummy1);
+        fs.existsSync(dummy2) && fs.unlinkSync(dummy2);
+        fs.existsSync(dummy3) && fs.unlinkSync(dummy3);
     }});
     it("TESTTESTpruneOldFiles() custom onPrune", async()=>{ try {
         var root = TEST_SOUNDS;
@@ -121,7 +123,8 @@
             oldFiles.push(oldPath);
             prunable += stats.size;
             await new Promise(resolve=>setTimeout(()=>resolve(1),MSTEST));
-            should(fp.pruning).above(0).below(5);
+            expect(fp.pruning).toBeGreaterThan(0);
+            expect(fp.pruning).toBeLessThan(5);
             return false; // don't delete old file
         };
         var pruneDate = new Date(pruneDays*MSDAY);
@@ -134,7 +137,7 @@
         } catch (err) {
             fs.closeSync(fs.openSync(dummy1, 'w'));
         }
-        fs.writeFileSync(dummy2, "dummy2"); 
+        fs.writeFileSync(dummy2, "dummy2");
         fs.writeFileSync(dummy3, "dummy3.mp3");
         try { // touch pruneDate
             fs.utimesSync(dummy3, pruneDate, pruneDate);
@@ -146,30 +149,31 @@
         var promise = fp.pruneOldFiles(onPrune);
 
         var res = await promise;
-        should(oldFiles.length).equal(2);
-        should(oldFiles[0]).match(/dummy3/);
-        should(oldFiles[1]).match(/dummy1/);
-        should(res.done - res.started).above(2*MSTEST).below(5000);
-        should(res).properties({
+        expect(oldFiles.length).toBe(2);
+        expect(oldFiles[0]).toMatch(/dummy3/);
+        expect(oldFiles[1]).toMatch(/dummy1/);
+        expect(res.done - res.started).toBeGreaterThan(2*MSTEST);
+        expect(res.done - res.started).toBeLessThan(5000);
+        expect(res).properties({
             bytesScanned: 174138,
             bytesPruned: 0,
             filesPruned: 0,
         });
-        should(prunable).equal(21); // dummy1+dummy3 file sizes
-        should(fp.pruning).equal(0);
+        expect(prunable).toBe(21); // dummy1+dummy3 file sizes
+        expect(fp.pruning).toBe(0);
 
         // nothing pruned
-        should(res).properties({
+        expect(res).properties({
             bytesScanned: 174138,
             bytesPruned: 0,
             filesPruned: 0,
         });
-        should(fs.existsSync(dummy1)).equal(true);
-        should(fs.existsSync(dummy2)).equal(true);
-        should(fs.existsSync(dummy3)).equal(true);
+        expect(fs.existsSync(dummy1)).toBe(true);
+        expect(fs.existsSync(dummy2)).toBe(true);
+        expect(fs.existsSync(dummy3)).toBe(true);
     } finally {
-        fs.existsSync(dummy1) && fs.unlinkSync(dummy1); 
-        fs.existsSync(dummy2) && fs.unlinkSync(dummy2); 
-        fs.existsSync(dummy3) && fs.unlinkSync(dummy3); 
+        fs.existsSync(dummy1) && fs.unlinkSync(dummy1);
+        fs.existsSync(dummy2) && fs.unlinkSync(dummy2);
+        fs.existsSync(dummy3) && fs.unlinkSync(dummy3);
     }});
 })

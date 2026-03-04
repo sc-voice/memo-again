@@ -1,12 +1,13 @@
-(typeof describe === 'function') && describe("memo-cache", function() {
-    const should = require("should");
-    const fs = require('fs');
-    const path = require('path');
-    const { MerkleJson } = require("merkle-json");
-    const {
-        GuidStore,
-        MemoCache,
-    } = require("../index");
+import { describe, it, expect } from '@sc-voice/vitest';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { MerkleJson } from 'merkle-json';
+import { GuidStore, MemoCache } from '../index.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+describe("memo-cache", () => {
     const APP_DIR = path.join(__dirname, '..');
     const SRC_DIR = path.join(__dirname, '..', 'src');
     const FILES_DIR = path.join(__dirname, 'data', 'files');
@@ -20,14 +21,14 @@
 
     it("default ctor", ()=>{
         var mc = new MemoCache();
-        should(mc).properties({
+        expect(mc).properties({
             map: {},
         });
-        should(mc.store).instanceOf(GuidStore);
-        should(mc.store.storePath).equal(path.join(LOCAL_DIR, "memo"));
-        should(mc.writeMem).equal(true);
-        should(mc.writeFile).equal(true);
-        should(mc.readFile).equal(true);
+        expect(mc.store).toBeInstanceOf(GuidStore);
+        expect(mc.store.storePath).toBe(path.join(LOCAL_DIR, "memo"));
+        expect(mc.writeMem).toBe(true);
+        expect(mc.writeFile).toBe(true);
+        expect(mc.readFile).toBe(true);
     });
     it("custom ctor", ()=>{
         var store = new GuidStore();
@@ -40,14 +41,14 @@
             writeFile,
             readFile,
         });
-        should(mc).properties({
+        expect(mc).properties({
             map: {},
             store,
             writeMem,
             writeFile,
             readFile,
         });
-        should(mc.store).equal(store);
+        expect(mc.store).toBe(store);
     });
     it("put(...) adds cache entry", async ()=>{
         var mc = new MemoCache({
@@ -57,8 +58,8 @@
         var volume = "volume1";
         var value = "value1";
         var res = mc.put({ guid, volume, value });
-        should(mc.map.volume1.guid1).equal(value);
-        should(res).equal(value);
+        expect(mc.map.volume1.guid1).toBe(value);
+        expect(res).toBe(value);
     });
     it("writeMem suppresses memory cache", async ()=>{
         var mc = new MemoCache({
@@ -69,15 +70,15 @@
         var volume = "volume1";
         var value = "value1";
         var res = mc.put({ guid, volume, value });
-        should(mc.map.volume1.guid1).equal(undefined);
-        should(res).equal(value);
-        should(mc.get({ guid, volume})).equal(value); // file cache
-        should(mc.map.volume1.guid1).equal(undefined);
+        expect(mc.map.volume1.guid1).toBe(undefined);
+        expect(res).toBe(value);
+        expect(mc.get({ guid, volume})).toBe(value); // file cache
+        expect(mc.map.volume1.guid1).toBe(undefined);
 
         var mc2 = new MemoCache({
             store: TEST_STORE,
         });
-        should(mc2.get({ guid, volume})).equal(value); // file cache
+        expect(mc2.get({ guid, volume})).toBe(value); // file cache
     });
     it("get(...) retrieves cache entry", ()=>{
         var mc = new MemoCache({
@@ -87,7 +88,7 @@
         var volume = "volume2";
         var value = "value2";
         mc.put({ guid, volume, value });
-        should.deepEqual(mc.get({guid, volume}), value);
+        expect(mc.get({guid, volume})).toEqual(value);
     });
     it("get(...) retrieves serialized cache entry", async ()=>{
         var mc = new MemoCache({
@@ -100,7 +101,7 @@
 
         // New cache instance remembers
         var mc2 = new MemoCache({ store: mc.store });
-        should.deepEqual(mc2.get({guid, volume}), value);
+        expect(mc2.get({guid, volume})).toEqual(value);
     });
     it("get/put handle Promises", async ()=>{
         var mc = new MemoCache({
@@ -113,22 +114,22 @@
         await mc.clearVolume(volume); // Clear for testing
 
         // file cache will be written when value is resolved
-        var promise = mc.put({ guid, volume, value }); 
-        should(fs.existsSync(fpath)).equal(false);
-
-        // wait for file cache 
-        var pval = await promise; // wait for file write
+        var promise = mc.put({ guid, volume, value });
         var fpath = mc.store.guidPath({guid, volume});
-        should(fs.existsSync(fpath)).equal(true);
-        should(pval).equal(await value);
-        should(mc.logger.lastLog()).match(/put\(volume4,guid4\)/);
+        expect(fs.existsSync(fpath)).toBe(false);
+
+        // wait for file cache
+        var pval = await promise; // wait for file write
+        expect(fs.existsSync(fpath)).toBe(true);
+        expect(pval).toBe(await value);
+        expect(mc.logger.lastLog()).toMatch(/put\(volume4,guid4\)/);
 
         // New cache will reuse saved values
         var mc2 = new MemoCache({ store: mc.store });
         var v2 = mc2.get({guid, volume});
-        should(v2).instanceOf(Promise);
-        should(await v2).equal("value4");
-        should(mc2.map[volume][guid]).equal(v2); // in memory map
+        expect(v2).toBeInstanceOf(Promise);
+        expect(await v2).toBe("value4");
+        expect(mc2.map[volume][guid]).toBe(v2); // in memory map
     });
     it("clearVolume() clears cache", async()=>{
         var mc = new MemoCache({
@@ -139,18 +140,18 @@
         var volume = "volume5";
         var value = "value5";
         await mc.clearVolume(volume); // Clear for testing
-        should(mc.logger.lastLog()).match(/clearVolume\(volume5\)/);
+        expect(mc.logger.lastLog()).toMatch(/clearVolume\(volume5\)/);
 
         mc.put({ guid, volume, value }); // deleted value
-        mc.put({ guid: "guid6", volume: "volume6", value:"value6" }); 
-        should(mc.map[volume][guid]).equal(value);
+        mc.put({ guid: "guid6", volume: "volume6", value:"value6" });
+        expect(mc.map[volume][guid]).toBe(value);
         var fpath = mc.store.guidPath({guid, volume});
-        should(fs.existsSync(fpath)).equal(true);
+        expect(fs.existsSync(fpath)).toBe(true);
 
         await mc.clearVolume(volume);
-        should(mc.map[volume]).equal(undefined);
-        should(fs.existsSync(fpath)).equal(false);
-        should(mc.get({guid:"guid6",volume:"volume6"})).equal("value6");
+        expect(mc.map[volume]).toBe(undefined);
+        expect(fs.existsSync(fpath)).toBe(false);
+        expect(mc.get({guid:"guid6",volume:"volume6"})).toBe("value6");
     });
     it("TESTTESTget(...) touches serialized cache entry", async ()=>{
         var mc = new MemoCache({
@@ -161,14 +162,14 @@
         var guid = "guid7";
         var volume = "volume7";
         var value = "value7";
-        should(mc).properties({fileReads:0, fileWrites:0});
+        expect(mc).properties({fileReads:0, fileWrites:0});
         mc.put({ guid, volume, value }); // wait for file write
-        should(mc).properties({fileReads:0, fileWrites:1});
+        expect(mc).properties({fileReads:0, fileWrites:1});
         var fpath = mc.store.guidPath({guid,volume});
         await new Promise(r=>setTimeout(()=>r(),100));
 
         mc.get({ guid, volume}); // touch
-        should(mc).properties({fileReads:1, fileWrites:1});
+        expect(mc).properties({fileReads:1, fileWrites:1});
     });
     it("writeFile suppresses file cache", async()=>{
         var mc = new MemoCache({
@@ -182,11 +183,11 @@
         mc.put({ guid, volume, value }); // wait for file write
 
         // Original cache instance remembers
-        should.deepEqual(mc.get({guid, volume}), value); // memory
+        expect(mc.get({guid, volume})).toEqual(value); // memory
 
         // New cache instance doesn't remember
         var mc2 = new MemoCache({ store: mc.store });
-        should.deepEqual(mc2.get({guid, volume}), undefined); 
+        expect(mc2.get({guid, volume})).toEqual(undefined);
     });
     it("writeMem and writeFile can be functions", async ()=>{
         var write;
@@ -201,16 +202,16 @@
         mc.clearVolume(volume);
 
         write = false;
-        should(mc.isFlag(mc.writeMem)).equal(false);
-        should(mc.isFlag(mc.writeFile)).equal(false);
+        expect(mc.isFlag(mc.writeMem)).toBe(false);
+        expect(mc.isFlag(mc.writeFile)).toBe(false);
         mc.put({ guid, volume, value }); // wait for file write
-        should.deepEqual(mc.get({guid, volume}), undefined);
+        expect(mc.get({guid, volume})).toEqual(undefined);
 
         write = true;
-        should(mc.isFlag(mc.writeMem)).equal(true);
-        should(mc.isFlag(mc.writeFile)).equal(true);
+        expect(mc.isFlag(mc.writeMem)).toBe(true);
+        expect(mc.isFlag(mc.writeFile)).toBe(true);
         mc.put({ guid, volume, value }); // wait for file write
-        should.deepEqual(mc.get({guid, value}), undefined);
+        expect(mc.get({guid, value})).toEqual(undefined);
     });
     it("volumes() => [volumeNames]", async()=>{
         var mc = new MemoCache({
@@ -222,7 +223,7 @@
         var volume = "volume10";
         var value = "value10";
         mc.put({ guid, volume, value }); // wait for file write
-        should(mc.volumes().find(v=>v===volume)).equal(volume);
+        expect(mc.volumes().find(v=>v===volume)).toBe(volume);
 
         var mc = new MemoCache({
             store: TEST_STORE,
@@ -233,7 +234,7 @@
         var volume = "volume11";
         var value = "value11";
         mc.put({ guid, volume, value }); // wait for file write
-        should(mc.volumes().find(v=>v===volume)).equal(volume);
+        expect(mc.volumes().find(v=>v===volume)).toBe(volume);
     });
     it("fileSize() => total file size", async()=>{
         var mc = new MemoCache({
@@ -246,7 +247,7 @@
         var bytesBefore = await mc.fileSize();
         mc.put({ guid, volume, value }); // wait for file write
         var bytesAfter = await mc.fileSize();
-        should(bytesAfter-bytesBefore).equal(70);
+        expect(bytesAfter-bytesBefore).toBe(70);
     });
     it("readFile can disable file cache read", async()=>{
         var store = TEST_STORE;
@@ -255,10 +256,10 @@
         var volume = "volume13";
         var value = "value13";
         mc.put({ guid, volume, value }); // wait for file write
-        should(mc.get({guid, volume})).equal(value);
+        expect(mc.get({guid, volume})).toBe(value);
 
         var mcNoRead = new MemoCache({ store, readFile: false });
-        should(mcNoRead.get({guid, volume})).equal(undefined);
+        expect(mcNoRead.get({guid, volume})).toBe(undefined);
     });
 
 })

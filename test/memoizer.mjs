@@ -1,15 +1,15 @@
-(typeof describe === 'function') && describe("memoizer", function() {
-    const fs = require("fs");
-    const path = require("path");
-    const should = require("should");
-    const {
-        MemoCache,
-        Memoizer,
-    } = require("../index");
-    const LOCAL = path.join(__dirname, "..", "local");
-    this.timeout(5*1000);
-    const CONTEXT = "test";
-    const STORENAME = "test-memo";
+import { describe, it, expect } from '@sc-voice/vitest';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { MemoCache, Memoizer } from '../index.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const LOCAL = path.join(__dirname, "..", "local");
+const CONTEXT = "test";
+const STORENAME = "test-memo";
+
+describe("memoizer", () => {
 
     class TestCache {
         constructor() {
@@ -29,41 +29,41 @@
 
     it("default ctor", ()=>{
         var mzr = new Memoizer();
-        should(mzr.cache).instanceOf(MemoCache);
-        should(mzr.cache.writeMem).equal(true);
-        should(mzr.cache.writeFile).equal(true);
-        should(mzr.cache.readFile).equal(true);
-        should(mzr.cache.store.storeName).equal('memo');
-        should(mzr.cache.store.storePath).equal(`${LOCAL}/memo`);
+        expect(mzr.cache).toBeInstanceOf(MemoCache);
+        expect(mzr.cache.writeMem).toBe(true);
+        expect(mzr.cache.writeFile).toBe(true);
+        expect(mzr.cache.readFile).toBe(true);
+        expect(mzr.cache.store.storeName).toBe('memo');
+        expect(mzr.cache.store.storePath).toBe(`${LOCAL}/memo`);
     });
     it("custom ctor", ()=>{
         var cache = new TestCache();
         var mzr = new Memoizer({ cache });
-        should(mzr.cache).equal(cache);
+        expect(mzr.cache).toBe(cache);
 
         var storePath = path.join(LOCAL, `custom`, `here`);
         var mzr = new Memoizer({ storePath});
-        should(mzr.cache.store.storePath).equal(storePath);
-        should(fs.existsSync(storePath)).equal(true);
+        expect(mzr.cache.store.storePath).toBe(storePath);
+        expect(fs.existsSync(storePath)).toBe(true);
 
         var mzr = new Memoizer({ writeMem: false });
-        should(mzr.cache.writeMem).equal(false);
-        should(mzr.cache.writeFile).equal(true);
-        should(mzr.cache.readFile).equal(true);
+        expect(mzr.cache.writeMem).toBe(false);
+        expect(mzr.cache.writeFile).toBe(true);
+        expect(mzr.cache.readFile).toBe(true);
 
         var mzr = new Memoizer({ writeFile: false });
-        should(mzr.cache.writeMem).equal(true);
-        should(mzr.cache.writeFile).equal(false);
-        should(mzr.cache.readFile).equal(false);
+        expect(mzr.cache.writeMem).toBe(true);
+        expect(mzr.cache.writeFile).toBe(false);
+        expect(mzr.cache.readFile).toBe(false);
 
         var mzr = new Memoizer({ readFile: false });
-        should(mzr.cache.writeMem).equal(true);
-        should(mzr.cache.writeFile).equal(true);
-        should(mzr.cache.readFile).equal(false);
+        expect(mzr.cache.writeMem).toBe(true);
+        expect(mzr.cache.writeFile).toBe(true);
+        expect(mzr.cache.readFile).toBe(false);
 
         var storeName = 'test-memo';
         var mzr = new Memoizer({ storeName });
-        should(mzr.cache.store.storeName).equal(storeName);
+        expect(mzr.cache.store.storeName).toBe(storeName);
     });
     it("memoizer stores non-promise results", async()=>{
         var mzr = new Memoizer({storeName: STORENAME});
@@ -72,30 +72,30 @@
         // memoize function
         var f1 = function(arg){return `${arg}-41`};
         var m1 = mzr.memoize(f1, CONTEXT);
-        should(m1('test')).equal('test-41');
-        should(m1('test')).equal('test-41');
+        expect(m1('test')).toBe('test-41');
+        expect(m1('test')).toBe('test-41');
 
         // memoize arrow function
         var f2 = arg=>`${arg}-42`;
         var m2 = mzr.memoize(f2, CONTEXT);
-        should(m2('test')).equal('test-42');
-        should(m2('test')).equal('test-42');
+        expect(m2('test')).toBe('test-42');
+        expect(m2('test')).toBe('test-42');
 
         // memoize class method
         var calls = 0;
         class TestClass {
-            static someMethod(arg) { 
+            static someMethod(arg) {
                 calls++;
-                return `${arg}-43`; 
+                return `${arg}-43`;
             }
         }
         var tst = new TestClass();
         await mzr.clearMemo(TestClass.someMethod, TestClass);
         var m3 = mzr.memoize(TestClass.someMethod, TestClass);
-        should(m3('test')).equal('test-43');
-        should(calls).equal(1);
-        should(m3('test')).equal('test-43');
-        should(calls).equal(1);
+        expect(m3('test')).toBe('test-43');
+        expect(calls).toBe(1);
+        expect(m3('test')).toBe('test-43');
+        expect(calls).toBe(1);
     });
     it("memoizer stores promise results", async()=>{
         const DELAY = 100;
@@ -108,32 +108,34 @@
 
         var ms0 = Date.now();
         var p = m('test');
-        should(p).instanceOf(Promise);
-        should(await p).equal('test-42');
-        var FUDGE = 2; 
-        should(Date.now()-ms0).above(DELAY-FUDGE); 
+        expect(p).toBeInstanceOf(Promise);
+        expect(await p).toBe('test-42');
+        var FUDGE = 2;
+        expect(Date.now()-ms0).toBeGreaterThanOrEqual(DELAY-FUDGE);
 
         var ms1 = Date.now();
-        should(await m('test')).equal('test-42');
-        should(Date.now()-ms1).above(-1).below(DELAY);
+        expect(await m('test')).toBe('test-42');
+        var elapsed = Date.now()-ms1;
+        expect(elapsed).toBeGreaterThanOrEqual(-1);
+        expect(elapsed).toBeLessThan(DELAY);
     });
     it("volumeOf(...)=>volume name", ()=>{
         class TestClass {
-            static staticMethod(arg) { 
+            static staticMethod(arg) {
                 return "a static method";
             }
 
-            instanceMethod(arg) { 
+            instanceMethod(arg) {
                 // DO NOT MEMOIZE INSTANCE METHODS
             }
         }
         var mzr = new Memoizer();
         var fun = ()=>'fun!';
         var tst = new TestClass();
-        should(mzr.volumeOf(()=>true)).equal("global.lambda");
-        should(mzr.volumeOf(fun, "Polygon")).equal("Polygon.fun");
-        should(mzr.volumeOf(TestClass.staticMethod, TestClass))
-            .equal("TestClass.staticMethod");
+        expect(mzr.volumeOf(()=>true)).toBe("global.lambda");
+        expect(mzr.volumeOf(fun, "Polygon")).toBe("Polygon.fun");
+        expect(mzr.volumeOf(TestClass.staticMethod, TestClass))
+            .toBe("TestClass.staticMethod");
 
     });
     it("custom serialization", async()=>{
@@ -155,23 +157,23 @@
         }
         let add1 = x=>new TestClass({answer:x+1});
         let mzr = new Memoizer({
-            serialize: TestClass.serialize, 
+            serialize: TestClass.serialize,
             deserialize: TestClass.deserialize,
             writeMem: false,
         });
         await mzr.clearMemo(add1, "test");
         let add1Memo = mzr.memoize(add1, CONTEXT);
         var ans = add1Memo(42);
-        should(lastSerialized).equal(JSON.stringify({
+        expect(lastSerialized).toBe(JSON.stringify({
             isPromise: false,
             volume: 'test.add1',
             args:[42],
             value:{answer:43},
         }));
         var expected = new TestClass({answer:43});
-        should.deepEqual(add1Memo(42), expected); // computed
+        expect(add1Memo(42)).toEqual(expected); // computed
         await new Promise(r=>setTimeout(r,100));
-        should.deepEqual(add1Memo(42), expected); // cached
+        expect(add1Memo(42)).toEqual(expected); // cached
     });
 
 });

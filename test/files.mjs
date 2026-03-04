@@ -1,35 +1,37 @@
-(typeof describe === 'function') && describe("files", function() {
-    const should = require("should");
-    const fs = require('fs');
-    const path = require('path');
-    const { MerkleJson } = require("merkle-json");
-    const {
-        Files,
-    } = require("../index");
-    const APP_DIR = path.join(__dirname, '..');
-    const SRC_DIR = path.join(__dirname, '..', 'src');
-    const FILES_DIR = path.join(__dirname, 'data', 'files');
-    const LOCAL_DIR = path.join(APP_DIR, 'local');
-    var mj = new MerkleJson();
+import { describe, it, expect } from '@sc-voice/vitest';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { MerkleJson } from 'merkle-json';
+import { Files } from '../index.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const APP_DIR = path.join(__dirname, '..');
+const SRC_DIR = path.join(__dirname, '..', 'src');
+const FILES_DIR = path.join(__dirname, 'data', 'files');
+const LOCAL_DIR = path.join(APP_DIR, 'local');
+var mj = new MerkleJson();
+
+describe("files", () => {
 
     it("LOCAL_DIR", ()=>{
-        should(Files.LOCAL_DIR).equal(LOCAL_DIR);
+        expect(Files.LOCAL_DIR).toBe(LOCAL_DIR);
     });
     it("APP_DIR", ()=>{
-        should(Files.APP_DIR).equal(APP_DIR);
+        expect(Files.APP_DIR).toBe(APP_DIR);
     });
     it("filesSync(root) => generator", ()=>{
         // Specify root path
         var files = [...Files.filesSync(FILES_DIR)];
-        should.deepEqual(files, [
+        expect(files).toEqual([
             "universe",
             "sub/basement",
-            "hello", 
+            "hello",
         ]);
 
         // Default is source folder
         var files = [...Files.filesSync()];
-        should.deepEqual(files, [
+        expect(files).toEqual([
             "memoizer.js",
             "memo-cache.js",
             "guid-store.js",
@@ -38,17 +40,17 @@
         ]);
     });
     it("filesSync(root) => absolute path", ()=>{
-        // absolute path 
+        // absolute path
         var files = [...Files.filesSync({root: FILES_DIR, absolute:true})];
-        should.deepEqual(files.map(f=>f.replace(APP_DIR,'...')), [
+        expect(files.map(f=>f.replace(APP_DIR,'...'))).toEqual([
             ".../test/data/files/universe",
             ".../test/data/files/sub/basement",
-            ".../test/data/files/hello", 
+            ".../test/data/files/hello",
         ]);
 
         // absolute path undefined
         var files = [...Files.filesSync({absolute:true})];
-        should.deepEqual(files.map(f=>f.replace(APP_DIR,'...')), [
+        expect(files.map(f=>f.replace(APP_DIR,'...'))).toEqual([
             ".../src/memoizer.js",
             ".../src/memo-cache.js",
             ".../src/guid-store.js",
@@ -58,12 +60,12 @@
     });
     it("filesSync(root) => stats", ()=>{
         var files = [...Files.filesSync({root: FILES_DIR, stats:true})];
-        should.deepEqual(files.map(f=>f.path.replace(APP_DIR,'...')), [
+        expect(files.map(f=>f.path.replace(APP_DIR,'...'))).toEqual([
             "universe",
             "sub/basement",
             "hello",
         ]);
-        should.deepEqual(files.map(f=>f.stats.size), [ 9, 13, 6, ]);
+        expect(files.map(f=>f.stats.size)).toEqual([ 9, 13, 6, ]);
     });
     it("files(root) => async generator", async()=>{
         // The async generator has best performance
@@ -72,8 +74,8 @@
         for await (let f of Files.files(FILES_DIR)) {
             files.unshift(f);
         }
-        should.deepEqual(files, [
-            "hello", 
+        expect(files).toEqual([
+            "hello",
             "sub/basement",
             "universe",
         ]);

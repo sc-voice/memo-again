@@ -1,20 +1,22 @@
-(typeof describe === 'function') && describe("guid-store", function() {
-    const should = require("should");
-    const fs = require('fs');
-    const path = require('path');
-    const { MerkleJson } = require("merkle-json");
-    const { logger, LogInstance } = require("log-instance");
-    const {
-        GuidStore,
-    } = require("../index");
-    const local = path.join(__dirname, '..', 'local');
-    var mj = new MerkleJson();
+import { describe, it, expect } from '@sc-voice/vitest';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { MerkleJson } from 'merkle-json';
+import { logger, LogInstance } from 'log-instance';
+import { GuidStore } from '../index.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const local = path.join(__dirname, '..', 'local');
+var mj = new MerkleJson();
+
+describe("guid-store", () => {
 
     it("default ctor", ()=>{
         var store = new GuidStore();
-        should(store.storePath).equal(path.join(local, 'guid-store'));
-        should(fs.existsSync(store.storePath)).equal(true);
-        should(store.logger).equal(logger);
+        expect(store.storePath).toBe(path.join(local, 'guid-store'));
+        expect(fs.existsSync(store.storePath)).toBe(true);
+        expect(store.logger).toBe(logger);
     });
     it("custom ctor", ()=>{
         var logger2 = new LogInstance();
@@ -23,10 +25,10 @@
             storeName: 'sounds',
             logger: logger2,
         });
-        should(store.storePath).equal(path.join(local, 'sounds'));
-        should(store.volume).equal('common');
-        should(fs.existsSync(store.storePath)).equal(true);
-        should(store.logger).equal(logger2);
+        expect(store.storePath).toBe(path.join(local, 'sounds'));
+        expect(store.volume).toBe('common');
+        expect(fs.existsSync(store.storePath)).toBe(true);
+        expect(store.logger).toBe(logger2);
     });
     it("guidPath(guid) returns file path of guid", function() {
         var store = new GuidStore();
@@ -34,7 +36,7 @@
         var guidDir = guid.substring(0,2);
         var commonPath = path.join(local, 'guid-store', 'common', guidDir);
         var dirPath = path.join(commonPath, guid);
-        should(store.guidPath(guid,'.gif')).equal(`${dirPath}.gif`);
+        expect(store.guidPath(guid,'.gif')).toBe(`${dirPath}.gif`);
 
         // volume and chapter can be specified
         var volume = 'test-volume';
@@ -48,7 +50,7 @@
         var chapterPath = path.join(local, 'guid-store', volume, chapter);
         var id = 'tv-tc-1.2.3';
         var idPath = path.join(chapterPath, `${id}${suffix}`);
-        should(store.guidPath(id,opts)).equal(idPath);
+        expect(store.guidPath(id,opts)).toBe(idPath);
     });
     it("signaturePath(signature) => file path of signature", ()=>{
         var store = new GuidStore();
@@ -59,8 +61,8 @@
         var signature = {
             guid,
         };
-        should(store.signaturePath(signature,'.txt'))
-            .equal(`${sigPath}.txt`);
+        expect(store.signaturePath(signature,'.txt'))
+            .toBe(`${sigPath}.txt`);
 
         var store = new GuidStore({
             type: 'SoundStore',
@@ -74,36 +76,36 @@
         var signature = {
             guid,
         };
-        should(store.signaturePath(signature)).equal(expectedPath);
+        expect(store.signaturePath(signature)).toBe(expectedPath);
     });
     it("clearVolume() removes files in volume", async()=>{
         var store = new GuidStore();
 
         var fDel1 = store.guidPath({
-            guid: "del1", 
+            guid: "del1",
             volume: "clear",
         });
         fs.writeFileSync(fDel1, "delete-me");
         var fDel2 = store.guidPath({
-            guid: "del2", 
+            guid: "del2",
             volume: "clear",
         });
         fs.writeFileSync(fDel2, "delete-me");
         var fSave = store.guidPath({
-            guid: "54321", 
+            guid: "54321",
             volume: "save",
         });
         fs.writeFileSync(fSave, "save-me");
 
         // Only delete files in volume
-        should(fs.existsSync(fDel1)).equal(true);
-        should(fs.existsSync(fDel2)).equal(true);
-        should(fs.existsSync(fSave)).equal(true);
+        expect(fs.existsSync(fDel1)).toBe(true);
+        expect(fs.existsSync(fDel2)).toBe(true);
+        expect(fs.existsSync(fSave)).toBe(true);
         var count = await store.clearVolume("clear");
-        should(count).equal(2);
-        should(fs.existsSync(fDel1)).equal(false);
-        should(fs.existsSync(fDel2)).equal(false);
-        should(fs.existsSync(fSave)).equal(true);
+        expect(count).toBe(2);
+        expect(fs.existsSync(fDel1)).toBe(false);
+        expect(fs.existsSync(fDel2)).toBe(false);
+        expect(fs.existsSync(fSave)).toBe(true);
     });
 
 })
