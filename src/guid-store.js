@@ -69,8 +69,12 @@
             let root = path.join(this.storePath, volume);
             if (fs.existsSync(root)) {
                 for await (let fname of Files.files({root, absolute:true})) {
-                    await fs.promises.unlink(fname);
-                    count++;
+                    try {
+                      fs.unlinkSync(fname);
+                      count++;
+                    } catch (e) {
+                      console.error("CAUGHT EXCEPTION unlink:", fname, e.message)
+                    }
                 }
             }
             return count;

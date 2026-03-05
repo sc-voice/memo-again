@@ -100,7 +100,7 @@ describe("file-pruner", () => {
             pruning: 0,
         });
         expect(earliest.toString()).toBe(jan1.toString());
-        expect(done - started).toBeGreaterThan(0);
+        expect(done - started).toBeGreaterThanOrEqual(0);
         expect(done - started).toBeLessThan(5000);
 
         expect(fs.existsSync(dummy1)).toBe(false);

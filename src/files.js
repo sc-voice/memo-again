@@ -68,20 +68,24 @@
                     continue;
                 }
 
-                this.found++;
-                var fstats = await fs.promises.stat(fpath);
-                if (fstats.isDirectory()) {
-                    var entries = await fs.promises.readdir(fpath);
-                    entries.forEach(dirEntry=>{
-                        stack.push(path.join(fpath,dirEntry));
-                    });
-                } else if (fstats.isFile()) {
-                    let ypath = absolute 
-                        ? fpath 
-                        : fpath.replace(reRoot,'');
-                    yield stats
-                        ? { stats: fstats, path: ypath, }
-                        : ypath;
+                try {
+                  var fstats = fs.statSync(fpath);
+                  this.found++;
+                  if (fstats.isDirectory()) {
+                      var entries = await fs.promises.readdir(fpath);
+                      entries.forEach(dirEntry=>{
+                          stack.push(path.join(fpath,dirEntry));
+                      });
+                  } else if (fstats.isFile()) {
+                      let ypath = absolute 
+                          ? fpath 
+                          : fpath.replace(reRoot,'');
+                      yield stats
+                          ? { stats: fstats, path: ypath, }
+                          : ypath;
+                  }
+                } catch (e) {
+                  console.error("CAUGHT EXCEPTION fpath:", fpath, e.message)
                 }
             }
         }
