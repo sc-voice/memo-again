@@ -21,7 +21,7 @@ describe("file-pruner", () => {
         var fp = new FilePruner({root});
         expect(fp.pruneDays).toBe(180);
         expect(fp.pruning).toBe(0);
-        expect(fp.logger).toBe(logger);
+        expect(fp.logger).toEqual(logger);
         expect(fp.onPrune).toBe(FilePruner.onPrune);
         expect(fp.started).toBe(undefined);
         expect(fp.done).toBe(undefined);

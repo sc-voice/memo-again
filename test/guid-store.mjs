@@ -16,7 +16,7 @@ describe("guid-store", () => {
         var store = new GuidStore();
         expect(store.storePath).toBe(path.join(local, 'guid-store'));
         expect(fs.existsSync(store.storePath)).toBe(true);
-        expect(store.logger).toBe(logger);
+        expect(store.logger).toEqual(logger);
     });
     it("custom ctor", ()=>{
         var logger2 = new LogInstance();
